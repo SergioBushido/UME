@@ -8,6 +8,7 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { CancelButton } from './cancel-button'
 
 export default async function RequestHistoryPage() {
     const supabase = await createClient()
@@ -61,7 +62,12 @@ export default async function RequestHistoryPage() {
                                     </Badge>
                                 </TableCell>
                                 <TableCell className="text-right text-muted-foreground">
-                                    {request.rejection_reason || '-'}
+                                    <div className="flex justify-end gap-2 items-center">
+                                        <span>{request.rejection_reason || '-'}</span>
+                                        {(request.status === 'pending' || request.status === 'approved') && (
+                                            <CancelButton requestId={request.id} />
+                                        )}
+                                    </div>
                                 </TableCell>
                             </TableRow>
                         ))}

@@ -2,6 +2,8 @@ import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Users, Calendar, AlertCircle } from "lucide-react"
 import Link from 'next/link'
+import { DashboardCalendarWrapper } from '@/components/shared/dashboard-calendar-wrapper'
+import { endOfMonth, format, startOfMonth } from 'date-fns'
 
 export default async function AdminDashboard() {
     const supabase = await createClient()
@@ -10,6 +12,17 @@ export default async function AdminDashboard() {
     const { count: userCount } = await supabase.from('profiles').select('*', { count: 'exact', head: true })
     const { count: pendingRequests } = await supabase.from('requests').select('*', { count: 'exact', head: true }).eq('status', 'pending')
     const { count: todayEvents } = await supabase.from('special_events').select('*', { count: 'exact', head: true }).eq('date', new Date().toISOString().split('T')[0])
+
+    // Fetch availability for current month
+    const today = new Date()
+    const start = startOfMonth(today)
+    const end = endOfMonth(today)
+
+    const { data: availability } = await supabase
+        .from('daily_availability')
+        .select('*')
+        .gte('date', format(start, 'yyyy-MM-dd'))
+        .lte('date', format(end, 'yyyy-MM-dd'))
 
     return (
         <div className="space-y-6">
@@ -58,6 +71,21 @@ export default async function AdminDashboard() {
                         </CardContent>
                     </Card>
                 </Link>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
+                <Card>
+                    <CardHeader>
+                        <CardTitle>Disponibilidad Actual ({format(today, 'MMMM')})</CardTitle>
+                    </CardHeader>
+                    <CardContent>
+                        <DashboardCalendarWrapper
+                            initialMonth={today}
+                            initialAvailability={availability || []}
+                            mode="admin"
+                        />
+                    </CardContent>
+                </Card>
             </div>
         </div>
     )

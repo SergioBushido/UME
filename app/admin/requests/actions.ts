@@ -18,25 +18,35 @@ export async function updateRequestStatus(requestId: string, status: 'approved' 
         throw new Error('No autorizado')
     }
 
-    // Use admin client to bypass RLS
-    const adminSupabase = createAdminClient()
+    // Use admin client to bypass RLS for RPC if needed, or just standard client since we granted permissions
+    // But since the RPC is SECURITY DEFINER, standard client works if authenticated.
 
-    const { data: updatedRequest, error } = await adminSupabase
-        .from('requests')
-        .update({
-            status,
-            rejection_reason: reason || null
-        })
-        .eq('id', requestId)
-        .select()
+    if (status === 'approved') {
+        const { error } = await supabase.rpc('approve_request_with_capacity', { request_id: requestId })
+        if (error) {
+            console.error('RPC Error:', error)
+            throw new Error(error.message)
+        }
+    } else if (status === 'rejected') {
+        // 1. Revert capacity (logic inside checks if it was approved)
+        const { error: revertError } = await supabase.rpc('revert_capacity_for_request', { request_id: requestId })
+        if (revertError) {
+            console.error('Revert RPC Error:', revertError)
+            throw new Error(revertError.message)
+        }
 
-    if (error) {
-        console.error('Error updating request:', error)
-        throw new Error(`Error al actualizar: ${error.message}`)
-    }
+        // 2. Update status
+        // We can use adminSupabase for this simple update or standard supabase if RLS allows
+        // Admin RLS allows check.
+        const { error } = await supabase
+            .from('requests')
+            .update({
+                status,
+                rejection_reason: reason || null
+            })
+            .eq('id', requestId)
 
-    if (!updatedRequest || updatedRequest.length === 0) {
-        throw new Error('No se pudo actualizar la solicitud (No encontrada)')
+        if (error) throw new Error(error.message)
     }
 
     revalidatePath('/admin/requests')

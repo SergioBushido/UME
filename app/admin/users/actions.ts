@@ -139,6 +139,27 @@ export async function deleteUser(userId: string) {
 
     const adminSupabase = createAdminClient()
 
+    // Delete profile first (since it might trigger cascades or just to be sure)
+    const { error: profileError } = await adminSupabase
+        .from('profiles')
+        .delete()
+        .eq('id', userId)
+
+    if (profileError) {
+        console.error('Error deleting profile:', profileError)
+        // Continue to try deleting auth user even if profile delete fails (maybe it's already gone)
+    }
+
+    // Delete requests for this user manually if cascade is missing
+    const { error: requestsError } = await adminSupabase
+        .from('requests')
+        .delete()
+        .eq('user_id', userId)
+
+    if (requestsError) {
+        console.error('Error deleting user requests:', requestsError)
+    }
+
     const { error } = await adminSupabase.auth.admin.deleteUser(userId)
 
     if (error) throw new Error(`Error eliminando usuario: ${error.message}`)

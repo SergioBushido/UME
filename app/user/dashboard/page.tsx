@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarCheck, Shield, User } from "lucide-react"
+import { DashboardCalendarWrapper } from '@/components/shared/dashboard-calendar-wrapper'
+import { endOfMonth, format, startOfMonth } from 'date-fns'
 
 export default async function UserDashboard() {
     const supabase = await createClient()
@@ -19,6 +21,17 @@ export default async function UserDashboard() {
         .select('*')
         .eq('user_id', user.id)
         .eq('status', 'approved')
+
+    // Fetch availability for current month
+    const today = new Date()
+    const start = startOfMonth(today)
+    const end = endOfMonth(today)
+
+    const { data: availability } = await supabase
+        .from('daily_availability')
+        .select('*')
+        .gte('date', format(start, 'yyyy-MM-dd'))
+        .lte('date', format(end, 'yyyy-MM-dd'))
 
     // Helper to calculate days for a set of requests
     const calculateDays = (type: 'PO' | 'DA' | 'AP', filter: 'consumed' | 'scheduled') => {
@@ -122,10 +135,28 @@ export default async function UserDashboard() {
                 </Card>
             </div>
 
-            <div className="mt-8">
-                <h2 className="text-xl font-semibold mb-4">Actividad Reciente</h2>
-                <div className="bg-card p-6 rounded-lg shadow text-center text-muted-foreground border border-border">
-                    No hay actividad reciente para mostrar.
+            <div className="grid gap-6 md:grid-cols-2">
+                <div className="space-y-6">
+                    <h2 className="text-xl font-semibold">Disponibilidad de Ausencias</h2>
+                    <Card>
+                        <CardHeader>
+                            <CardTitle>Días Libres ({format(today, 'MMMM')})</CardTitle>
+                        </CardHeader>
+                        <CardContent>
+                            <DashboardCalendarWrapper
+                                initialMonth={today}
+                                initialAvailability={availability || []}
+                                mode="user"
+                            />
+                        </CardContent>
+                    </Card>
+                </div>
+
+                <div className="space-y-6">
+                    <h2 className="text-xl font-semibold">Actividad Reciente</h2>
+                    <div className="bg-card p-6 rounded-lg shadow text-center text-muted-foreground border border-border">
+                        No hay actividad reciente para mostrar.
+                    </div>
                 </div>
             </div>
         </div>

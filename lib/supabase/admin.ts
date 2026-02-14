@@ -1,9 +1,10 @@
 import { createClient } from '@supabase/supabase-js'
+import { getEnvVar } from '@/lib/env'
 
 export function createAdminClient() {
     return createClient(
-        process.env.NEXT_PUBLIC_SUPABASE_URL!,
-        process.env.SUPABASE_SERVICE_ROLE_KEY!,
+        getEnvVar('NEXT_PUBLIC_SUPABASE_URL'),
+        getEnvVar('SUPABASE_SERVICE_ROLE_KEY'),
         {
             auth: {
                 autoRefreshToken: false,
