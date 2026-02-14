@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { updateRequest } from './actions'
+import { toast } from "sonner"
 import { Pencil } from "lucide-react"
 
 interface Request {
@@ -41,8 +42,9 @@ export function EditRequestDialog({ request }: { request: Request }) {
                 end_date: formData.get('end_date') as string,
             })
             setOpen(false)
+            toast.success("Solicitud actualizada correctamente")
         } catch (error) {
-            alert('Error updating request')
+            toast.error("Error al actualizar solicitud")
         } finally {
             setLoading(false)
         }

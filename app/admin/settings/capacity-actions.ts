@@ -132,9 +132,10 @@ export async function regenerateDailyAvailability(start: Date, end: Date) {
     const days = eachDayOfInterval({ start, end })
 
     // 2.1 Fetch all approved requests in this range to calculate approved_count accurately
+    // Include `user_id` so we can count unique users per day (prevent double-counting multiple requests)
     const { data: approvedRequests } = await supabase
         .from('requests')
-        .select('start_date, end_date')
+        .select('user_id, start_date, end_date')
         .eq('status', 'approved')
         .lte('start_date', format(end, 'yyyy-MM-dd'))
         .gte('end_date', format(start, 'yyyy-MM-dd'))
@@ -144,9 +145,15 @@ export async function regenerateDailyAvailability(start: Date, end: Date) {
 
         // Calculate approved count from requests
         // Compare using strings to avoid timezone issues (UTC vs Local)
-        const approved_count = approvedRequests?.filter(r => {
-            return dateStr >= r.start_date && dateStr <= r.end_date
-        }).length || 0
+        // Count unique users absent on this date
+        const usersSet = new Set<string>()
+        approvedRequests?.forEach(r => {
+            if (dateStr >= r.start_date && dateStr <= r.end_date) {
+                if (r.user_id) usersSet.add(r.user_id)
+            }
+        })
+
+        const approved_count = usersSet.size || 0
 
         // Find applicable staff level
         const level = staffLevels?.find(l => {

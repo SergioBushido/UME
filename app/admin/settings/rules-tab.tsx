@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { upsertPresenceRule, deletePresenceRule, type PresenceRule } from './capacity-actions'
 import { format } from 'date-fns'
+import { toast } from "sonner"
 import { Trash } from "lucide-react"
 
 export function RulesTab({ rules }: { rules: PresenceRule[] }) {
@@ -22,9 +23,10 @@ export function RulesTab({ rules }: { rules: PresenceRule[] }) {
                 min_presence_percent: Number(formData.get('min_presence_percent')),
                 description: formData.get('description') as string
             })
+            toast.success("Regla guardada correctamente")
         } catch (error) {
             console.error(error)
-            alert('Error al guardar regla')
+            toast.error("Error al guardar regla")
         } finally {
             setLoading(false)
         }

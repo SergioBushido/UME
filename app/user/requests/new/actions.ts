@@ -74,6 +74,20 @@ export async function createRequest(formData: FormData) {
     if (type === 'DA' && (profile.balance_da || 0) < diffDays) throw new Error(`Saldo insuficiente de DA. Disponibles: ${profile.balance_da}, Solicitados: ${diffDays}`)
     if (type === 'AP' && (profile.balance_ap || 0) < diffDays) throw new Error(`Saldo insuficiente de AP. Disponibles: ${profile.balance_ap}, Solicitados: ${diffDays}`)
 
+    // Prevent overlapping requests of a different type (or duplicates) for the same user
+    const { data: overlapping } = await supabase
+        .from('requests')
+        .select('id, type, start_date, end_date, status')
+        .eq('user_id', user.id)
+        .neq('status', 'cancelled')
+        .lte('start_date', end_date)
+        .gte('end_date', start_date)
+
+    if (overlapping && overlapping.length > 0) {
+        // If any existing overlapping request has a different type or same type, block creation
+        throw new Error('Ya existe una solicitud solapada para estas fechas. No se permiten múltiples permisos en el mismo día.')
+    }
+
     const { error } = await supabase.from('requests').insert({
         user_id: user.id,
         type,

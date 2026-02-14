@@ -16,6 +16,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Plus } from "lucide-react"
 import { createSpecialEvent } from './actions'
+import { toast } from "sonner"
 
 interface Profile {
     id: string
@@ -34,8 +35,9 @@ export function CreateEventDialog({ users }: { users: Profile[] }) {
         try {
             await createSpecialEvent(formData)
             setOpen(false)
+            toast.success("Evento creado correctamente")
         } catch (error) {
-            alert('Error creating event')
+            toast.error("Error al crear evento")
         } finally {
             setLoading(false)
         }

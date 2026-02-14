@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logger } from '@/lib/logger'
 
 export async function getDayDetails(date: string) {
     const supabase = await createClient()
@@ -13,7 +14,7 @@ export async function getDayDetails(date: string) {
         .eq('date', date)
         .single()
 
-    // 2. Fetch approved requests that include this date
+    // 2. Fetch requests that include this date
     const { data: requests } = await supabase
         .from('requests')
         .select(`
@@ -28,7 +29,7 @@ export async function getDayDetails(date: string) {
         .neq('status', 'cancelled') // Hide cancelled requests
         .order('created_at', { ascending: false }) // Order by newest
 
-    console.log(`getDayDetails for ${date}: Found ${requests?.length} requests (excluding cancelled).`)
+    logger.debug(`getDayDetails for ${date}: Found ${requests?.length ?? 0} requests (excluding cancelled).`)
 
 
     // 3. Fetch special events ? (Optional, but good for context)
@@ -67,17 +68,16 @@ export async function revokeRequest(requestId: string, path: string) {
         .eq('id', requestId)
 
     if (updateError) {
-        console.error("Error updating status to cancelled:", updateError)
+        logger.error('Error updating status to cancelled:', updateError)
         throw new Error(updateError.message)
     }
 
     // 3. Regenerate availability for the affected range to ensure accuracy
-    // This fixes any "0/8" sync issues automatically.
-    // We import dynamically to avoid circular deps if any (though here it's fine)
     const { regenerateDailyAvailability } = await import('@/app/admin/settings/capacity-actions')
-    await regenerateDailyAvailability(req.start_date, req.end_date)
+    // regenerateDailyAvailability expects Date objects
+    await regenerateDailyAvailability(new Date(req.start_date), new Date(req.end_date))
 
-    console.log(`Request ${requestId} cancelled and capacity regenerated.`)
+    logger.debug(`Request ${requestId} cancelled and capacity regenerated.`)
 
     revalidatePath('/admin/dashboard')
     revalidatePath('/admin/capacity')

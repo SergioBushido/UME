@@ -13,12 +13,6 @@ export async function cancelRequest(requestId: string) {
     // Verify ownership
     const { data: request } = await supabase.from('requests').select('*').eq('id', requestId).single()
     if (!request) throw new Error('Solicitud no encontrada')
-
-    if (request.data && request.data.user_id !== user.id) {
-        // Wait, supabase returns data wrapper. 
-    }
-    // The above select returns data: request. 
-
     if (request.user_id !== user.id) throw new Error('No autorizado')
 
     // If already cancelled or rejected, do nothing?

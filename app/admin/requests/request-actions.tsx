@@ -2,6 +2,7 @@
 
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 import { Check, X } from "lucide-react"
 import {
     Dialog,
@@ -33,8 +34,9 @@ export function RequestActions({ request }: { request: Request }) {
         setLoading(true)
         try {
             await updateRequestStatus(request.id, 'approved')
+            toast.success("Solicitud aprobada correctamente")
         } catch (error) {
-            alert('Error')
+            toast.error("Error al aprobar solicitud")
         } finally {
             setLoading(false)
         }
@@ -49,8 +51,9 @@ export function RequestActions({ request }: { request: Request }) {
         try {
             await updateRequestStatus(request.id, 'rejected', reason)
             setRejectOpen(false)
+            toast.success("Solicitud rechazada correctamente")
         } catch (error) {
-            alert('Error')
+            toast.error("Error al rechazar solicitud")
         } finally {
             setLoading(false)
         }

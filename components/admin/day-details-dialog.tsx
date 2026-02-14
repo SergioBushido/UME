@@ -8,7 +8,7 @@ import { es } from "date-fns/locale"
 import { Loader2, Trash2, UserX, Pencil } from "lucide-react"
 import { useState, useTransition } from "react"
 import { revokeRequest } from "@/app/admin/capacity/actions"
-// import { toast } from "sonner" // Not installed
+import { toast } from "sonner"
 import { cn } from "@/lib/utils"
 
 interface DayDetailsProps {
@@ -21,6 +21,7 @@ interface DayDetailsProps {
 }
 
 export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpdate }: DayDetailsProps) {
+
     const [isPending, startTransition] = useTransition()
     const [isAdding, setIsAdding] = useState(false)
     const [users, setUsers] = useState<any[]>([])
@@ -99,9 +100,14 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
 
                 onUpdate()
                 handleCancelForm()
+                toast.success(editingId ? "Ausencia actualizada correctamente." : "Ausencia creada correctamente.", {
+                    description: "Operación exitosa"
+                })
             } catch (error: any) {
                 console.error(error)
-                alert("Error: " + error.message)
+                toast.error(error.message || "Ha ocurrido un error.", {
+                    description: "Error"
+                })
             }
         })
     }
@@ -114,9 +120,14 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
             try {
                 await revokeRequest(requestId, '/admin/capacity') // Revalidate general path
                 onUpdate() // Refresh local data
+                toast.success("La solicitud ha sido cancelada correctamente.", {
+                    description: "Solicitud cancelada"
+                })
             } catch (error) {
                 console.error(error)
-                alert("Error al cancelar la solicitud")
+                toast.error("No se pudo cancelar la solicitud.", {
+                    description: "Error"
+                })
             }
         })
     }
@@ -131,7 +142,7 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
             <DialogContent className="max-w-md">
                 <DialogHeader>
                     <DialogTitle>
-                        {format(date, "d 'de' MMMM, yyyy")}
+                        {date ? format(date, "d 'de' MMMM, yyyy") : 'Selecciona una fecha'}
                     </DialogTitle>
                     <DialogDescription>
                         Administrar ausencias y capacidad.
@@ -242,46 +253,64 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
                                     </p>
                                 ) : (
                                     <ul className="space-y-2">
-                                        {requests?.map((req: any) => (
-                                            <li key={req.id} className="flex items-center justify-between text-sm p-2 bg-card border rounded shadow-sm">
-                                                <div>
-                                                    <p className="font-medium">
-                                                        {req.profiles?.full_name}
-                                                        <span className={cn(
-                                                            "ml-2 text-[10px] px-1.5 py-0.5 rounded-full border border-current",
-                                                            req.status === 'approved' ? "text-green-600 bg-green-50 border-green-200" :
-                                                                req.status === 'pending' ? "text-yellow-600 bg-yellow-50 border-yellow-200" :
-                                                                    "text-red-600 bg-red-50 border-red-200"
-                                                        )}>
-                                                            {req.status === 'approved' ? 'Aprobado' : req.status === 'pending' ? 'Pendiente' : 'Rechazado'}
-                                                        </span>
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {req.type} • {format(new Date(req.start_date), 'd MMM')} - {format(new Date(req.end_date), 'd MMM')}
-                                                    </p>
-                                                </div>
-                                                <div className="flex gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-blue-600 hover:bg-blue-50"
-                                                        onClick={() => handleStartEdit(req)}
-                                                        disabled={isPending}
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
-                                                    </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                                        onClick={() => handleRevoke(req.id)}
-                                                        disabled={isPending}
-                                                    >
-                                                        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
-                                                    </Button>
-                                                </div>
-                                            </li>
-                                        ))}
+                                        {(() => {
+                                            // Deduplicate by user_id: prefer approved over pending/rejected, show one entry per user
+                                            const sorted = (requests || []).slice().sort((a: any, b: any) => {
+                                                const score = (s: string) => (s === 'approved' ? 0 : s === 'pending' ? 1 : 2)
+                                                const sa = score(a.status)
+                                                const sb = score(b.status)
+                                                if (sa !== sb) return sa - sb
+                                                // fallback to created_at descending if present
+                                                if (a.created_at && b.created_at) return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
+                                                return 0
+                                            })
+
+                                            const map = new Map<string, any>()
+                                            for (const req of sorted) {
+                                                if (!map.has(req.user_id)) map.set(req.user_id, req)
+                                            }
+
+                                            return Array.from(map.values()).map((req: any) => (
+                                                <li key={req.id} className="flex items-center justify-between text-sm p-2 bg-card border rounded shadow-sm">
+                                                    <div>
+                                                        <p className="font-medium">
+                                                            {req.profiles?.full_name}
+                                                            <span className={cn(
+                                                                "ml-2 text-[10px] px-1.5 py-0.5 rounded-full border border-current",
+                                                                req.status === 'approved' ? "text-green-600 bg-green-50 border-green-200" :
+                                                                    req.status === 'pending' ? "text-yellow-600 bg-yellow-50 border-yellow-200" :
+                                                                        "text-red-600 bg-red-50 border-red-200"
+                                                            )}>
+                                                                {req.status === 'approved' ? 'Aprobado' : req.status === 'pending' ? 'Pendiente' : 'Rechazado'}
+                                                            </span>
+                                                        </p>
+                                                        <p className="text-xs text-muted-foreground">
+                                                            {req.type} • {format(new Date(req.start_date), 'd MMM')} - {format(new Date(req.end_date), 'd MMM')}
+                                                        </p>
+                                                    </div>
+                                                    <div className="flex gap-1">
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-blue-600 hover:bg-blue-50"
+                                                            onClick={() => handleStartEdit(req)}
+                                                            disabled={isPending}
+                                                        >
+                                                            <Pencil className="h-4 w-4" />
+                                                        </Button>
+                                                        <Button
+                                                            variant="ghost"
+                                                            size="icon"
+                                                            className="h-8 w-8 text-destructive hover:bg-destructive/10"
+                                                            onClick={() => handleRevoke(req.id)}
+                                                            disabled={isPending}
+                                                        >
+                                                            {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                                        </Button>
+                                                    </div>
+                                                </li>
+                                            ))
+                                        })()}
                                     </ul>
                                 )}
                             </div>

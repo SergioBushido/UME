@@ -15,6 +15,7 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { updateUser } from './actions'
+import { toast } from "sonner"
 import { Pencil } from "lucide-react"
 
 interface User {
@@ -40,8 +41,9 @@ export function EditUserDialog({ user }: { user: User }) {
                 section: formData.get('section') as string,
             })
             setOpen(false)
+            toast.success("Usuario actualizado correctamente")
         } catch (error) {
-            alert('Error updating user')
+            toast.error("Error al actualizar usuario")
         } finally {
             setLoading(false)
         }

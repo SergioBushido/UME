@@ -2,6 +2,7 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { revalidatePath } from 'next/cache'
+import { logger } from '@/lib/logger'
 
 // No, existing logic might be tied to specific user flow.
 // Actually, `approve_request_with_capacity` is a client-wrapper for the RPC.
@@ -18,7 +19,22 @@ export async function createManualAbsence(formData: FormData) {
 
     if (!userId || !type || !date) throw new Error("Missing fields")
 
-    // 1. Create request
+    // Prevent overlapping requests for this user on the same dates
+    const start = date
+    const end = date
+    const { data: overlapping } = await supabase
+        .from('requests')
+        .select('id,type,start_date,end_date,status')
+        .eq('user_id', userId)
+        .neq('status', 'cancelled')
+        .lte('start_date', end)
+        .gte('end_date', start)
+
+    if (overlapping && overlapping.length > 0) {
+        throw new Error('El usuario ya tiene una ausencia en esa fecha.')
+    }
+
+    // 1. Create request as pending
     const { data: request, error } = await supabase
         .from('requests')
         .insert({
@@ -27,32 +43,29 @@ export async function createManualAbsence(formData: FormData) {
             start_date: date,
             end_date: date,
             reason: 'Manual entry by Admin',
-            status: 'approved' // Insert directly as approved? 
-            // If we insert as approved, the trigger/RPC for capacity might not run unless we use the specific function.
-            // The DB constraints might block if we don't handle capacity. 
-            // But my `regenerateDailyAvailability` is now the source of truth for counts.
-            // So if I insert this, and then run `regenerateDailyAvailability`, it would be fine.
-            // BUT better to use the RPC `approve_request_with_capacity` to ensure atomic updates.
+            status: 'pending'
         })
         .select()
         .single()
 
-    if (error) {
-        // If RLS failing because inserted as 'approved' directly? 
-        // Let's insert as 'pending' first.
-        throw new Error(error.message)
-    }
-
-    // Actually, if I insert as 'approved', I need to manually decrement capacity or run sync.
-    // Let's rely on the RPC.
-
-    // BETTER STRATEGY: 
-    // 1. Insert as 'pending'.
-    // 2. Call `approve_request_with_capacity(id)`.
+    if (error) throw new Error(error.message)
 }
 
 export async function createAndApproveAbsence(userId: string, type: 'PO' | 'DA' | 'AP', startDate: string, endDate: string) {
     const supabase = await createClient()
+
+    // Prevent overlapping requests for this user
+    const { data: overlapping } = await supabase
+        .from('requests')
+        .select('id,type,start_date,end_date,status')
+        .eq('user_id', userId)
+        .neq('status', 'cancelled')
+        .lte('start_date', endDate)
+        .gte('end_date', startDate)
+
+    if (overlapping && overlapping.length > 0) {
+        throw new Error('El usuario ya tiene una ausencia solapada en ese rango de fechas.')
+    }
 
     // 1. Insert Request
     const { data: request, error } = await supabase
@@ -101,11 +114,23 @@ export async function updateAbsence(requestId: string, data: { userId: string, t
     if (oldReq?.status === 'approved') {
         const { error: revertError } = await supabase.rpc('revert_capacity_for_request', { request_id: requestId })
         if (revertError) {
-            console.error('Error reverting previous capacity:', revertError)
-            // Proceed cautiously? Or throw? 
-            // Throwing is safer to avoid balance corruption
+            logger.error('Error reverting previous capacity:', revertError)
             throw new Error('Error al revertir la capacidad anterior: ' + revertError.message)
         }
+    }
+
+    // Prevent overlapping (other) requests for this user in the NEW range
+    const { data: overlapping } = await supabase
+        .from('requests')
+        .select('id,type,start_date,end_date,status')
+        .eq('user_id', data.userId)
+        .neq('status', 'cancelled')
+        .lte('start_date', data.endDate)
+        .gte('end_date', data.startDate)
+
+    // If overlapping exists other than the current request, block
+    if (overlapping?.some((r: any) => r.id !== requestId)) {
+        throw new Error('Existe otra ausencia solapada para este usuario en las nuevas fechas.')
     }
 
     // 2. Update the request details (set to pending)

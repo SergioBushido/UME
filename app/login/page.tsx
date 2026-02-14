@@ -45,36 +45,36 @@ export default function LoginPage() {
                     <form action={login}>
                         <CardContent className="space-y-4">
                             <div className="space-y-2">
-                                <Label htmlFor="email" className="text-gray-200">Email</Label>
+                                <Label htmlFor="email" className="text-foreground/90">Email</Label>
                                 <div className="relative">
-                                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                                    <Mail className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                     <Input
                                         id="email"
                                         name="email"
                                         type="email"
                                         placeholder="rango.apellido@ume.es"
-                                        className="pl-10 bg-black/50 border-white/20 text-white placeholder:text-gray-500 focus:border-red-500 focus:ring-red-500"
+                                        className="pl-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
                                         required
                                     />
                                 </div>
                             </div>
                             <div className="space-y-2">
-                                <Label htmlFor="password" className="text-gray-200">Contraseña</Label>
+                                <Label htmlFor="password" className="text-foreground/90">Contraseña</Label>
                                 <div className="relative">
-                                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-gray-400" />
+                                    <Lock className="absolute left-3 top-2.5 h-5 w-5 text-muted-foreground" />
                                     <Input
                                         id="password"
                                         name="password"
                                         type="password"
                                         placeholder="••••••••"
-                                        className="pl-10 bg-black/50 border-white/20 text-white placeholder:text-gray-500 focus:border-red-500 focus:ring-red-500"
+                                        className="pl-10 bg-background/50 border-input text-foreground placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
                                         required
                                     />
                                 </div>
                             </div>
                         </CardContent>
                         <CardFooter>
-                            <Button className="w-full bg-red-700 hover:bg-red-800 text-white border-0 font-semibold" type="submit">
+                            <Button className="w-full bg-primary hover:bg-primary/90 text-primary-foreground border-0 font-bold shadow-md transition-all duration-200" type="submit">
                                 Iniciar Sesión
                             </Button>
                         </CardFooter>

@@ -8,6 +8,7 @@ import { ChevronLeft, ChevronRight } from "lucide-react"
 import { getDailyAvailability } from '@/app/admin/settings/capacity-actions'
 import { getDayDetails } from '@/app/admin/capacity/actions'
 import { DayDetailsDialog } from '@/components/admin/day-details-dialog'
+import { createClient as createBrowserSupabase } from '@/lib/supabase/client'
 
 interface DashboardCalendarWrapperProps {
     initialMonth: Date
@@ -37,12 +38,9 @@ export function DashboardCalendarWrapper({
             const end = format(new Date(date.getFullYear(), date.getMonth() + 1, 0), 'yyyy-MM-dd')
 
             // Re-using the server action
-            const { data } = await getDailyAvailability(start, end)
-            // Need to map the data to match DailyAvailability type if needed, 
-            // but the types should match since we defined them similarly.
-            // However, getDailyAvailability returns the raw DB rows.
-            // AvailabilityCalendar expects DailyAvailability.
-            // Let's ensure type compatibility.
+            const data = await getDailyAvailability(start, end)
+            // getDailyAvailability returns the raw rows array (or null)
+            // Ensure we set availability to an array
             // @ts-ignore
             setAvailability(data || [])
         } catch (error) {
@@ -95,6 +93,26 @@ export function DashboardCalendarWrapper({
             setIsDetailsLoading(false)
         }
     }
+
+    // Real-time: subscribe to `requests` changes and refresh availability/day details
+    useEffect(() => {
+        const supabase = createBrowserSupabase()
+        const channel = supabase
+            .channel('public:requests')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, () => {
+                fetchAvailability(currentMonth)
+                if (selectedDate) updateDayDetails()
+            })
+            .subscribe()
+
+        return () => {
+            try {
+                supabase.removeChannel(channel)
+            } catch (e) {
+                // ignore
+            }
+        }
+    }, [currentMonth, selectedDate, fetchAvailability, updateDayDetails])
 
     return (
         <div className="space-y-4">

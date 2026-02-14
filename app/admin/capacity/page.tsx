@@ -1,7 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 // import { getDailyAvailability } from '../settings/capacity-actions'
 import { DashboardCalendarWrapper } from '@/components/shared/dashboard-calendar-wrapper'
-import { endOfMonth, format, startOfMonth } from 'date-fns'
+import { ForceSyncButton } from '@/components/admin/force-sync-button'
+import { endOfMonth, format, startOfMonth, subMonths, addMonths } from 'date-fns'
 // import { Button } from "@/components/ui/button"
 // import Link from 'next/link'
 // import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -43,6 +44,9 @@ export default async function CapacityPage({
                 <div>
                     <h2 className="text-3xl font-bold tracking-tight">Calendario de Capacidad</h2>
                     <p className="text-muted-foreground">Visualiza la disponibilidad diaria y el cumplimiento de presencias.</p>
+                </div>
+                <div>
+                    <ForceSyncButton />
                 </div>
             </div>
 

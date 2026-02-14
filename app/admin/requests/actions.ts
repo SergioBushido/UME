@@ -3,6 +3,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
+import { logger } from '@/lib/logger'
 
 export async function updateRequestStatus(requestId: string, status: 'approved' | 'rejected', reason?: string) {
     const supabase = await createClient()
@@ -18,26 +19,19 @@ export async function updateRequestStatus(requestId: string, status: 'approved' 
         throw new Error('No autorizado')
     }
 
-    // Use admin client to bypass RLS for RPC if needed, or just standard client since we granted permissions
-    // But since the RPC is SECURITY DEFINER, standard client works if authenticated.
-
     if (status === 'approved') {
         const { error } = await supabase.rpc('approve_request_with_capacity', { request_id: requestId })
         if (error) {
-            console.error('RPC Error:', error)
+            logger.error('RPC Error:', error)
             throw new Error(error.message)
         }
     } else if (status === 'rejected') {
-        // 1. Revert capacity (logic inside checks if it was approved)
         const { error: revertError } = await supabase.rpc('revert_capacity_for_request', { request_id: requestId })
         if (revertError) {
-            console.error('Revert RPC Error:', revertError)
+            logger.error('Revert RPC Error:', revertError)
             throw new Error(revertError.message)
         }
 
-        // 2. Update status
-        // We can use adminSupabase for this simple update or standard supabase if RLS allows
-        // Admin RLS allows check.
         const { error } = await supabase
             .from('requests')
             .update({

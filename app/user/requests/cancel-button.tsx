@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { cancelRequest } from "./actions"
+import { toast } from "sonner"
 import { Loader2, XCircle } from "lucide-react"
 
 export function CancelButton({ requestId }: { requestId: string }) {
@@ -13,9 +14,10 @@ export function CancelButton({ requestId }: { requestId: string }) {
         setLoading(true)
         try {
             await cancelRequest(requestId)
+            toast.success("Solicitud cancelada correctamente")
         } catch (error) {
             console.error(error)
-            alert('Error al cancelar la solicitud')
+            toast.error("Error al cancelar la solicitud")
         } finally {
             setLoading(false)
         }

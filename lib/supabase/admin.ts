@@ -1,10 +1,13 @@
 import { createClient } from '@supabase/supabase-js'
-import { getEnvVar } from '@/lib/env'
+
 
 export function createAdminClient() {
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY!
+
     return createClient(
-        getEnvVar('NEXT_PUBLIC_SUPABASE_URL'),
-        getEnvVar('SUPABASE_SERVICE_ROLE_KEY'),
+        supabaseUrl,
+        serviceRoleKey,
         {
             auth: {
                 autoRefreshToken: false,

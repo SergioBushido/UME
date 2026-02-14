@@ -8,6 +8,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { upsertStaffLevel, deleteStaffLevel, type StaffLevel } from './capacity-actions'
 import { format } from 'date-fns'
+import { toast } from "sonner"
 import { Trash } from "lucide-react"
 
 export function StaffTab({ levels }: { levels: StaffLevel[] }) {
@@ -21,9 +22,10 @@ export function StaffTab({ levels }: { levels: StaffLevel[] }) {
                 end_date: formData.get('end_date') ? formData.get('end_date') as string : null,
                 total_staff: Number(formData.get('total_staff'))
             })
+            toast.success("Plantilla guardada correctamente")
         } catch (error) {
             console.error(error)
-            alert('Error al guardar plantilla')
+            toast.error("Error al guardar plantilla")
         } finally {
             setLoading(false)
         }
