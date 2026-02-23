@@ -1,4 +1,4 @@
-﻿import { login } from './actions'
+import { login } from './actions'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -10,9 +10,8 @@ import { Footer } from '@/components/shared/footer'
 export default function LoginPage() {
     return (
         <div className='min-h-screen relative flex flex-col items-center justify-center overflow-x-hidden pt-12'>
-            {/* Background Image with Overlay */}
             <div className='absolute inset-0 z-0 h-screen'>
-                <div className='absolute inset-0 bg-black/60 z-10' /> {/* Dark overlay */}
+                <div className='absolute inset-0 bg-black/60 z-10' />
                 <Image
                     src='/bg-background'
                     alt='SIGEO Background'
@@ -21,9 +20,7 @@ export default function LoginPage() {
                     priority
                 />
             </div>
-
             <div className='relative z-10 w-full max-w-sm px-4 flex flex-col items-center'>
-                {/* UME Logo */}
                 <div className='flex justify-center mb-6'>
                     <Image
                         src='/logo_ume.png'
@@ -33,15 +30,11 @@ export default function LoginPage() {
                         className='drop-shadow-2xl animate-in fade-in zoom-in duration-700'
                     />
                 </div>
-
-                {/* Spanish Flag */}
                 <div className='flex w-full h-10 mb-8 shadow-lg rounded-sm overflow-hidden border border-black/30'>
-                    <div className='h-full w-1/4 bg-[#AA151B]'></div> {/* Rojo */}
-                    <div className='h-full w-2/4 bg-[#F1BF00] flex items-center justify-center'>
-                    </div>
-                    <div className='h-full w-1/4 bg-[#AA151B]'></div> {/* Rojo */}
+                    <div className='h-full w-1/4 bg-[#AA151B]'></div>
+                    <div className='h-full w-2/4 bg-[#F1BF00] flex items-center justify-center'></div>
+                    <div className='h-full w-1/4 bg-[#AA151B]'></div>
                 </div>
-
                 <div className='mb-8 text-center text-white'>
                     <h1 className='text-5xl font-extrabold tracking-tighter mb-2 text-primary drop-shadow-md'>SIGEO</h1>
                     <p className='text-sm font-light tracking-[0.2em] opacity-90 leading-tight uppercase text-center'>Sistema Integral de Gestión de Efectivos Operativos</p>
@@ -92,7 +85,6 @@ export default function LoginPage() {
                     </form>
                 </Card>
             </div>
-
             <div className='mt-auto w-full relative z-20'>
                 <Footer />
             </div>
