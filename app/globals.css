@@ -49,54 +49,44 @@
 
 @layer base {
   :root {
-    /* UME Elegant Theme - Deep Navy Slate & Tactical Colors */
-    /* Base Background: Deep Navy Slate */
-    --background: oklch(0.13 0.02 260);
-    --foreground: oklch(0.98 0 0);
+    /* UME Elegant Light Theme - Professional & Tactical */
+    --background: oklch(0.98 0 0);
+    --foreground: oklch(0.13 0.02 260);
 
-    /* Surfaces: Slightly lighter slate */
-    --card: oklch(0.17 0.03 260);
-    --card-foreground: oklch(0.98 0 0);
-    --popover: oklch(0.17 0.03 260);
-    --popover-foreground: oklch(0.98 0 0);
+    --card: oklch(1 0 0);
+    --card-foreground: oklch(0.13 0.02 260);
+    --popover: oklch(1 0 0);
+    --popover-foreground: oklch(0.13 0.02 260);
 
-    /* Primary: UME Red (#AA151B equivalent) */
     --primary: oklch(0.48 0.22 25);
     --primary-foreground: oklch(0.98 0 0);
 
-    /* Secondary: UME Yellow (#F1BF00 equivalent) */
-    --secondary: oklch(0.78 0.18 85);
+    --secondary: oklch(0.90 0.15 85);
     --secondary-foreground: oklch(0.15 0.05 260);
 
-    /* Muted */
-    --muted: oklch(0.25 0.04 260);
-    --muted-foreground: oklch(0.70 0.04 260);
+    --muted: oklch(0.93 0.01 260);
+    --muted-foreground: oklch(0.45 0.02 260);
 
-    /* Accent */
-    --accent: oklch(0.25 0.04 260);
-    --accent-foreground: oklch(0.98 0 0);
+    --accent: oklch(0.93 0.01 260);
+    --accent-foreground: oklch(0.13 0.02 260);
 
-    /* Destructive */
     --destructive: oklch(0.45 0.20 25);
     --destructive-foreground: oklch(0.98 0 0);
 
-    /* Borders & Inputs */
-    --border: oklch(0.25 0.04 260);
-    --input: oklch(0.25 0.04 260);
+    --border: oklch(0.90 0.02 260);
+    --input: oklch(0.90 0.02 260);
     --ring: oklch(0.48 0.22 25);
     --radius: 0.5rem;
 
-    /* Sidebar */
-    --sidebar: oklch(0.11 0.03 260);
-    --sidebar-foreground: oklch(0.98 0 0);
+    --sidebar: oklch(0.96 0.01 260);
+    --sidebar-foreground: oklch(0.13 0.02 260);
     --sidebar-primary: oklch(0.48 0.22 25);
     --sidebar-primary-foreground: oklch(0.98 0 0);
-    --sidebar-accent: oklch(0.20 0.04 260);
-    --sidebar-accent-foreground: oklch(0.98 0 0);
-    --sidebar-border: oklch(0.20 0.04 260);
+    --sidebar-accent: oklch(0.90 0.02 260);
+    --sidebar-accent-foreground: oklch(0.13 0.02 260);
+    --sidebar-border: oklch(0.90 0.02 260);
     --sidebar-ring: oklch(0.48 0.22 25);
 
-    /* Charts */
     --chart-1: oklch(0.48 0.22 25);
     --chart-2: oklch(0.78 0.18 85);
     --chart-3: oklch(0.55 0.10 145);
@@ -105,26 +95,34 @@
   }
 
   .dark {
-    /* Inherit root values */
+    /* UME Elegant Dark Theme - Deep Navy Slate & Tactical Colors */
     --background: oklch(0.13 0.02 260);
     --foreground: oklch(0.98 0 0);
+
     --card: oklch(0.17 0.03 260);
     --card-foreground: oklch(0.98 0 0);
     --popover: oklch(0.17 0.03 260);
     --popover-foreground: oklch(0.98 0 0);
+
     --primary: oklch(0.48 0.22 25);
     --primary-foreground: oklch(0.98 0 0);
+
     --secondary: oklch(0.78 0.18 85);
     --secondary-foreground: oklch(0.15 0.05 260);
+
     --muted: oklch(0.25 0.04 260);
     --muted-foreground: oklch(0.70 0.04 260);
+
     --accent: oklch(0.25 0.04 260);
     --accent-foreground: oklch(0.98 0 0);
+
     --destructive: oklch(0.45 0.20 25);
     --destructive-foreground: oklch(0.98 0 0);
+
     --border: oklch(0.25 0.04 260);
     --input: oklch(0.25 0.04 260);
     --ring: oklch(0.48 0.22 25);
+
     --sidebar: oklch(0.11 0.03 260);
     --sidebar-foreground: oklch(0.98 0 0);
     --sidebar-primary: oklch(0.48 0.22 25);
@@ -133,6 +131,12 @@
     --sidebar-accent-foreground: oklch(0.98 0 0);
     --sidebar-border: oklch(0.20 0.04 260);
     --sidebar-ring: oklch(0.48 0.22 25);
+
+    --chart-1: oklch(0.48 0.22 25);
+    --chart-2: oklch(0.78 0.18 85);
+    --chart-3: oklch(0.55 0.10 145);
+    --chart-4: oklch(0.60 0.15 250);
+    --chart-5: oklch(0.65 0.05 260);
   }
 
   * {
@@ -140,7 +144,7 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground transition-colors duration-300;
   }
 }
 

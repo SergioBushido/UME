@@ -4,6 +4,8 @@ import { Users, Calendar, AlertCircle } from "lucide-react"
 import Link from 'next/link'
 import { DashboardCalendarWrapper } from '@/components/shared/dashboard-calendar-wrapper'
 import { endOfMonth, format, startOfMonth } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { NoticeBoard } from '@/components/board/notice-board'
 
 export default async function AdminDashboard() {
     const supabase = await createClient()
@@ -73,12 +75,12 @@ export default async function AdminDashboard() {
                 </Link>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-1 lg:grid-cols-2">
-                <Card>
-                    <CardHeader>
-                        <CardTitle>Disponibilidad Actual ({format(today, 'MMMM')})</CardTitle>
+            <div className="grid gap-6 lg:grid-cols-2">
+                <Card className="border-none shadow-md overflow-hidden self-start">
+                    <CardHeader className="bg-muted/30 pb-4">
+                        <CardTitle className="text-base font-bold">Disponibilidad Actual ({format(today, 'MMMM', { locale: es })})</CardTitle>
                     </CardHeader>
-                    <CardContent>
+                    <CardContent className="pt-6">
                         <DashboardCalendarWrapper
                             initialMonth={today}
                             initialAvailability={availability || []}
@@ -86,6 +88,10 @@ export default async function AdminDashboard() {
                         />
                     </CardContent>
                 </Card>
+
+                <div className="lg:border-l lg:pl-6 border-border/50">
+                    <NoticeBoard />
+                </div>
             </div>
         </div>
     )

@@ -10,8 +10,9 @@ import { endOfMonth, format, startOfMonth, subMonths, addMonths } from 'date-fns
 export default async function CapacityPage({
     searchParams,
 }: {
-    searchParams: { month?: string }
+    searchParams: Promise<{ month?: string }>
 }) {
+    const params = await searchParams
     const supabase = await createClient()
 
     // Verify admin
@@ -20,7 +21,7 @@ export default async function CapacityPage({
 
     // Determine date range
     const today = new Date()
-    const currentMonth = searchParams.month ? new Date(searchParams.month) : startOfMonth(today)
+    const currentMonth = params.month ? new Date(params.month) : startOfMonth(today)
 
     // Validate date
     const monthDate = isNaN(currentMonth.getTime()) ? startOfMonth(today) : currentMonth

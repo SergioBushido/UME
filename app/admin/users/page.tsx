@@ -15,6 +15,7 @@ import { CreateUserDialog } from './create-user-dialog'
 import { Trash } from "lucide-react"
 import { deleteUser } from './actions'
 import Link from 'next/link'
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
 export default async function UsersPage() {
     const supabase = await createClient()
@@ -100,10 +101,18 @@ export default async function UsersPage() {
                             return (
 
                                 <TableRow key={profile.id}>
-                                    <TableCell className="font-medium">
-                                        <Link href={`/admin/users/${profile.id}`} className="hover:underline text-primary">
-                                            {profile.full_name || 'Sin nombre'}
-                                        </Link>
+                                    <TableCell>
+                                        <div className="flex items-center gap-3">
+                                            <Avatar className="h-9 w-9 border border-border shadow-sm">
+                                                <AvatarImage src={profile.avatar_url} />
+                                                <AvatarFallback className="text-[10px] bg-muted">
+                                                    {profile.full_name?.substring(0, 2).toUpperCase() || 'U'}
+                                                </AvatarFallback>
+                                            </Avatar>
+                                            <Link href={`/admin/users/${profile.id}`} className="hover:underline text-primary font-bold">
+                                                {profile.full_name || 'Sin nombre'}
+                                            </Link>
+                                        </div>
                                     </TableCell>
                                     <TableCell>{profile.email}</TableCell>
                                     <TableCell>

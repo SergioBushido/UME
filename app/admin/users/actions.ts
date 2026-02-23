@@ -89,7 +89,15 @@ export async function createUser(data: { email: string, fullName: string, passwo
     revalidatePath('/admin/users')
 }
 
-export async function updateUser(userId: string, data: { email: string, fullName: string, section: string }) {
+export async function updateUser(userId: string, data: {
+    email: string,
+    fullName: string,
+    section: string,
+    role: string,
+    po: number,
+    da: number,
+    ap: number
+}) {
     const supabase = await createClient()
 
     // Verify admin
@@ -110,12 +118,16 @@ export async function updateUser(userId: string, data: { email: string, fullName
 
     if (authError) throw new Error(`Error actualizando auth: ${authError.message}`)
 
-    // Update Profile (Section + FullName)
+    // Update Profile (Section + FullName + Role + Balances)
     const { error: profileError } = await adminSupabase
         .from('profiles')
         .update({
             section: data.section,
-            full_name: data.fullName
+            full_name: data.fullName,
+            role: data.role,
+            balance_po: data.po,
+            balance_da: data.da,
+            balance_ap: data.ap
         })
         .eq('id', userId)
 

@@ -9,8 +9,9 @@ import { redirect } from 'next/navigation'
 export default async function UserCalendarPage({
     searchParams,
 }: {
-    searchParams: { month?: string }
+    searchParams: Promise<{ month?: string }>
 }) {
+    const params = await searchParams
     const supabase = await createClient()
     const { data: { user } } = await supabase.auth.getUser()
 
@@ -20,7 +21,7 @@ export default async function UserCalendarPage({
 
     // Determine date range
     const today = new Date()
-    const currentMonth = searchParams.month ? new Date(searchParams.month) : startOfMonth(today)
+    const currentMonth = params.month ? new Date(params.month) : startOfMonth(today)
 
     // Validate date
     const monthDate = isNaN(currentMonth.getTime()) ? startOfMonth(today) : currentMonth

@@ -51,8 +51,8 @@ export function AvailabilityCalendar({
         ))}
       </div>
 
-      <div className="overflow-x-auto">
-        <div className="min-w-[700px] grid grid-cols-7 gap-1">
+      <div className="overflow-x-visible">
+        <div className="grid grid-cols-7 gap-1">
           {days.map((day) => {
             const dateStr = format(day, 'yyyy-MM-dd')
             const data = availability.find((a) => a.date === dateStr)
@@ -68,7 +68,7 @@ export function AvailabilityCalendar({
             let bgClass = 'bg-background'
             if (blocked) bgClass = 'bg-gray-100 dark:bg-gray-800'
             else if (data) {
-              if (remaining <= 0) bgClass = 'bg-red-50 dark:bg-red-900/20 border-red-200'
+              if (remaining <= 0) bgClass = 'bg-red-50 dark:bg-red-900/20 border-red-200 shadow-sm'
               else if (remaining <= 1) bgClass = 'bg-orange-50 dark:bg-orange-900/20 border-orange-200'
               else bgClass = 'bg-green-50 dark:bg-green-900/20 border-green-200'
             } else if (!isCurrentMonth) bgClass = 'bg-muted/30'
@@ -78,46 +78,49 @@ export function AvailabilityCalendar({
                 key={dateStr}
                 onClick={() => mode === 'admin' && onDayClick && onDayClick(day)}
                 className={cn(
-                  'min-h-[64px] sm:min-h-[80px] p-2 sm:p-2 border rounded-md flex flex-col justify-between text-sm transition-all relative',
+                  'min-h-[56px] sm:min-h-[80px] p-1.5 sm:p-2 border rounded-md flex flex-col justify-between text-xs sm:text-sm transition-all relative overflow-hidden',
                   bgClass,
                   !isCurrentMonth && 'opacity-50'
                 )}
               >
                 <div className="flex justify-between items-start">
-                  <span className={cn('font-medium', isToday(day) && 'bg-primary text-primary-foreground rounded-full w-6 h-6 flex items-center justify-center -ml-1 -mt-1 text-xs')}>
+                  <span className={cn(
+                    'font-medium text-[10px] sm:text-xs',
+                    isToday(day) && 'bg-primary text-primary-foreground rounded-full w-5 h-5 sm:w-6 sm:h-6 flex items-center justify-center -ml-0.5 -mt-0.5'
+                  )}>
                     {format(day, 'd')}
                   </span>
-                  {blocked && <span className="text-[10px] bg-gray-500 text-white px-1 rounded">CERRADO</span>}
+                  {blocked && <span className="text-[8px] sm:text-[10px] bg-gray-500 text-white px-1 rounded transform scale-90 sm:scale-100">X</span>}
                 </div>
 
                 {data && !blocked && total > 0 ? (
-                  <div className="space-y-1 mt-1 text-xs">
+                  <div className="mt-auto">
                     {mode === 'admin' ? (
-                      <>
-                        <div className="flex justify-between">
-                          <span className="text-muted-foreground">Plantilla:</span>
-                          <span>{total}</span>
+                      <div className="space-y-0.5">
+                        <div className="flex justify-between text-[9px] sm:text-xs">
+                          <span className="text-muted-foreground hidden sm:inline">P:</span>
+                          <span className="font-medium">{total}</span>
                         </div>
-                        <div className="flex justify-between font-semibold">
-                          <span>Cupo:</span>
+                        <div className="flex justify-between font-bold text-[10px] sm:text-xs">
+                          <span className="text-muted-foreground hidden sm:inline">L:</span>
                           <span className={remaining <= 0 ? 'text-red-500' : 'text-green-600'}>
-                            {approved} / {max}
+                            {approved}/{max}
                           </span>
                         </div>
-                        <div className="w-full bg-gray-200 rounded-full h-1.5 dark:bg-gray-700 mt-1">
-                          <div className={cn('h-1.5 rounded-full', remaining <= 0 ? 'bg-red-500' : 'bg-green-500')} style={{ width: pct + '%' }} />
+                        <div className="w-full bg-gray-200 rounded-full h-1 dark:bg-gray-700 mt-1">
+                          <div className={cn('h-1 rounded-full', remaining <= 0 ? 'bg-red-500' : 'bg-green-500')} style={{ width: pct + '%' }} />
                         </div>
-                      </>
+                      </div>
                     ) : (
-                      <div className="flex flex-col items-center justify-center h-full pt-1">
-                        <span className={cn('font-bold text-lg', remaining <= 0 ? 'text-red-500' : 'text-green-600')}>{remaining <= 0 ? '0' : remaining}</span>
-                        <span className="text-[10px] text-muted-foreground">libres</span>
+                      <div className="flex flex-col items-center justify-center pt-0.5">
+                        <span className={cn('font-bold text-base sm:text-lg leading-none', remaining <= 0 ? 'text-red-500' : 'text-green-600')}>{remaining <= 0 ? '0' : remaining}</span>
+                        <span className="text-[7px] sm:text-[10px] text-muted-foreground uppercase font-bold tracking-tighter">libres</span>
                       </div>
                     )}
                   </div>
                 ) : (
                   isCurrentMonth && (
-                    <div className="text-[10px] text-muted-foreground text-center mt-4">{mode === 'admin' ? 'Sin config' : '-'}</div>
+                    <div className="text-[8px] text-muted-foreground text-center mt-2 leading-tight">{mode === 'admin' ? 'N/C' : '-'}</div>
                   )
                 )}
               </div>

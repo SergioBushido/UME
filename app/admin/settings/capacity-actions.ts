@@ -140,6 +140,15 @@ export async function regenerateDailyAvailability(start: Date, end: Date) {
         .lte('start_date', format(end, 'yyyy-MM-dd'))
         .gte('end_date', format(start, 'yyyy-MM-dd'))
 
+    // 1.5 Fetch blocked weeks
+    const { data: blockedSettings } = await supabase
+        .from('system_settings')
+        .select('value')
+        .eq('key', 'blocked_weeks')
+        .single()
+
+    const blockedWeeks = (blockedSettings?.value || []) as { start: string, end: string }[]
+
     const updates = days.map(day => {
         const dateStr = format(day, 'yyyy-MM-dd')
 
@@ -173,12 +182,16 @@ export async function regenerateDailyAvailability(start: Date, end: Date) {
         const min_required = Math.ceil((total_staff * min_percent) / 100)
         const max_absence = Math.max(0, total_staff - min_required)
 
+        // Check if day is blocked
+        const is_locked = blockedWeeks.some(range => dateStr >= range.start && dateStr <= range.end)
+
         return {
             date: dateStr,
             total_staff,
             min_required,
             max_absence,
-            approved_count // Sync with actual requests
+            approved_count,
+            is_locked
         }
     })
 

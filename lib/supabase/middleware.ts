@@ -44,7 +44,9 @@ export async function updateSession(request: NextRequest) {
         } = await supabase.auth.getUser()
 
         // Protected routes logic
-        if (request.nextUrl.pathname.startsWith('/admin') || request.nextUrl.pathname.startsWith('/user')) {
+        if (request.nextUrl.pathname.startsWith('/admin') ||
+            request.nextUrl.pathname.startsWith('/user') ||
+            request.nextUrl.pathname.startsWith('/chat')) {
             if (!user) {
                 return NextResponse.redirect(new URL('/login', request.url))
             }

@@ -8,6 +8,7 @@ import { updateSettings } from './actions'
 import { getCapacityConfig } from './capacity-actions'
 import { StaffTab } from './staff-tab'
 import { RulesTab } from './rules-tab'
+import { BlockedWeeksManager } from '@/components/admin/blocked-weeks-manager'
 
 export default async function SettingsPage() {
     const supabase = await createClient()
@@ -45,26 +46,17 @@ export default async function SettingsPage() {
                         <Card>
                             <CardHeader>
                                 <CardTitle>Semanas Bloqueadas</CardTitle>
-                                <CardDescription>Define rangos de fechas donde NO se pueden solicitar permisos.</CardDescription>
+                                <CardDescription>Define periodos donde el personal no podrá solicitar permisos (Ej: Navidad, Verano intenso).</CardDescription>
                             </CardHeader>
                             <CardContent>
                                 <form action={updateSettings}>
                                     <input type="hidden" name="key" value="blocked_weeks" />
-                                    <div className="space-y-4">
-                                        <div className="grid w-full gap-1.5">
-                                            <Label htmlFor="blocked_weeks">Rangos (JSON format por ahora)</Label>
-                                            <Textarea
-                                                id="blocked_weeks"
-                                                name="value"
-                                                placeholder='[{"start": "2024-12-20", "end": "2025-01-07"}]'
-                                                defaultValue={JSON.stringify(config.blocked_weeks || [], null, 2)}
-                                                className="font-mono"
-                                            />
-                                            <p className="text-sm text-muted-foreground">
-                                                Introduce un array JSON con objetos que tengan "start" y "end".
-                                            </p>
+                                    <div className="space-y-6">
+                                        <BlockedWeeksManager initialRanges={config.blocked_weeks || []} />
+
+                                        <div className="pt-4 border-t">
+                                            <Button type="submit" className="w-full sm:w-auto">Guardar Configuración de Bloqueos</Button>
                                         </div>
-                                        <Button type="submit">Guardar Bloqueos</Button>
                                     </div>
                                 </form>
                             </CardContent>

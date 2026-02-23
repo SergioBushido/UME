@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { createClient } from '@/lib/supabase/client'
 import { User, Calendar as CalendarIcon, Shield, AlertCircle } from 'lucide-react'
+import { Button } from "@/components/ui/button"
 import {
     HoverCard,
     HoverCardContent,
@@ -112,47 +113,51 @@ export default function CalendarView() {
 
     return (
         <Card className="w-full">
-            <CardHeader className="flex flex-row items-center justify-between">
+            <CardHeader className="flex flex-col sm:flex-row items-center justify-between gap-4">
                 <CardTitle>{monthNames[currentMonth]} {currentYear}</CardTitle>
-                <div className="flex gap-2">
-                    <button onClick={() => setDate(new Date(currentYear, currentMonth - 1, 1))}>&lt;</button>
-                    <button onClick={() => setDate(new Date())}>Hoy</button>
-                    <button onClick={() => setDate(new Date(currentYear, currentMonth + 1, 1))}>&gt;</button>
+                <div className="flex items-center gap-2">
+                    <Button variant="outline" size="sm" onClick={() => setDate(new Date(currentYear, currentMonth - 1, 1))}>&lt;</Button>
+                    <Button variant="outline" size="sm" onClick={() => setDate(new Date())}>Hoy</Button>
+                    <Button variant="outline" size="sm" onClick={() => setDate(new Date(currentYear, currentMonth + 1, 1))}>&gt;</Button>
                 </div>
             </CardHeader>
-            <CardContent>
-                <div className="grid grid-cols-7 gap-2 mb-2 text-center font-bold text-muted-foreground">
-                    <div>Dom</div><div>Lun</div><div>Mar</div><div>Mie</div><div>Jue</div><div>Vie</div><div>Sab</div>
-                </div>
-                <div className="grid grid-cols-7 gap-2">
-                    {blanks.map((_, i) => <div key={`blank-${i}`} className="h-32 bg-muted/20 rounded-md"></div>)}
-                    {days.map(d => {
-                        const dayDate = new Date(currentYear, currentMonth, d)
-                        const dayEvents = getEventsForDate(dayDate)
+            <CardContent className="p-2 sm:p-6">
+                <div className="overflow-x-visible">
+                    <div>
+                        <div className="grid grid-cols-7 gap-1 sm:gap-2 mb-2 text-center font-bold text-muted-foreground text-[10px] sm:text-base">
+                            <div>Dom</div><div>Lun</div><div>Mar</div><div>Mie</div><div>Jue</div><div>Vie</div><div>Sab</div>
+                        </div>
+                        <div className="grid grid-cols-7 gap-1 sm:gap-2">
+                            {blanks.map((_, i) => <div key={`blank-${i}`} className="h-16 sm:h-32 bg-muted/10 rounded-md"></div>)}
+                            {days.map(d => {
+                                const dayDate = new Date(currentYear, currentMonth, d)
+                                const dayEvents = getEventsForDate(dayDate)
 
-                        return (
-                            <div key={d} className="h-32 border border-border rounded-md p-1 overflow-y-auto bg-card hover:bg-accent/50 transition-colors relative">
-                                <span className="font-semibold text-sm text-muted-foreground block mb-1 sticky top-0 bg-card z-10">{d}</span>
-                                <div className="space-y-1">
-                                    {dayEvents.map((evt, idx) => (
-                                        <div
-                                            key={`${evt.id}-${idx}`}
-                                            className={`text-xs p-1 rounded truncate cursor-help font-medium border
-                                                ${evt.status === 'pending' ? 'opacity-70 border-dashed' : ''}
-                                                ${evt.type === 'PO' ? 'bg-blue-100/50 text-blue-700 border-blue-300 dark:bg-blue-900/50 dark:text-blue-100 dark:border-blue-800' : ''}
-                                                ${evt.type === 'DA' ? 'bg-purple-100/50 text-purple-700 border-purple-300 dark:bg-purple-900/50 dark:text-purple-100 dark:border-purple-800' : ''}
-                                                ${evt.type === 'AP' ? 'bg-indigo-100/50 text-indigo-700 border-indigo-300 dark:bg-indigo-900/50 dark:text-indigo-100 dark:border-indigo-800' : ''}
-                                                ${['guardia', 'curso'].includes(evt.type) ? 'bg-orange-100/50 text-orange-700 border-orange-300 dark:bg-orange-900/50 dark:text-orange-100 dark:border-orange-800' : ''}
-                                            `}
-                                            title={`${evt.userName} - ${evt.type} ${evt.status ? `(${evt.status})` : ''}`}
-                                        >
-                                            {evt.userName.split(' ')[0]} - {evt.type} {evt.status === 'pending' ? '(P)' : ''}
+                                return (
+                                    <div key={d} className="h-20 sm:h-32 border border-border rounded-md p-1 overflow-y-auto bg-card hover:bg-accent/50 transition-colors relative flex flex-col">
+                                        <span className="font-bold text-[10px] sm:text-sm text-muted-foreground block mb-1 sticky top-0 bg-card/80 backdrop-blur-sm z-10">{d}</span>
+                                        <div className="space-y-0.5 sm:space-y-1 flex-1">
+                                            {dayEvents.map((evt, idx) => (
+                                                <div
+                                                    key={`${evt.id}-${idx}`}
+                                                    className={`text-[8px] sm:text-[10px] p-0.5 sm:p-1 rounded truncate cursor-help font-medium border leading-tight
+                                                        ${evt.status === 'pending' ? 'opacity-70 border-dashed' : ''}
+                                                        ${evt.type === 'PO' ? 'bg-blue-100/50 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-100 dark:border-blue-800' : ''}
+                                                        ${evt.type === 'DA' ? 'bg-purple-100/50 text-purple-700 border-purple-200 dark:bg-purple-900/50 dark:text-purple-100 dark:border-purple-800' : ''}
+                                                        ${evt.type === 'AP' ? 'bg-indigo-100/50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-100 dark:border-indigo-800' : ''}
+                                                        ${['guardia', 'curso'].includes(evt.type) ? 'bg-orange-100/50 text-orange-700 border-orange-200 dark:bg-orange-900/50 dark:text-orange-100 dark:border-orange-800' : ''}
+                                                    `}
+                                                    title={`${evt.userName} - ${evt.type} ${evt.status ? `(${evt.status})` : ''}`}
+                                                >
+                                                    <span className="hidden sm:inline">{evt.userName.split(' ')[0]} - </span> {evt.type}
+                                                </div>
+                                            ))}
                                         </div>
-                                    ))}
-                                </div>
-                            </div>
-                        )
-                    })}
+                                    </div>
+                                )
+                            })}
+                        </div>
+                    </div>
                 </div>
             </CardContent>
         </Card>

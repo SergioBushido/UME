@@ -38,5 +38,14 @@ export async function updateSettings(formData: FormData) {
         await supabase.from('system_settings').insert({ key, value })
     }
 
+    // Trigger regeneration if blocked_weeks changed
+    if (key === 'blocked_weeks') {
+        const { regenerateDailyAvailability } = await import('./capacity-actions')
+        const now = new Date()
+        const start = new Date(now.getFullYear(), 0, 1) // Start of current year
+        const end = new Date(now.getFullYear() + 1, 11, 31) // End of next year
+        await regenerateDailyAvailability(start, end)
+    }
+
     revalidatePath('/admin/settings')
 }
