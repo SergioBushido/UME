@@ -44,7 +44,7 @@ export default function LoginPage() {
 
                 <div className="mb-8 text-center text-white">
                     <h1 className="text-5xl font-extrabold tracking-tighter mb-2 text-primary drop-shadow-md">SIGEO</h1>
-                    <p className="text-sm font-light tracking-[0.2em] opacity-90 leading-tight uppercase">Sistema Integral de Gestión de Efectivos Operativos</p>
+                    <p className="text-sm font-light tracking-[0.2em] opacity-90 leading-tight uppercase text-center">Sistema Integral de Gestión de Efectivos Operativos</p>
                 </div>
                 <Card className="w-full bg-black/40 backdrop-blur-md border border-white/10 shadow-2xl">
                     <CardHeader className="text-center">
