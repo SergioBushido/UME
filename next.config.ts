@@ -1,6 +1,6 @@
 import type { NextConfig } from "next";
 
-const nextConfig: NextConfig = {
+const nextConfig: any = {
   // Explicitly set Turbopack root to this project directory so Turbopack
   // doesn't pick a parent folder when multiple lockfiles exist on disk.
   // Use '.' to indicate the current workspace/project folder.
