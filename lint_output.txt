@@ -1,0 +1,234 @@
+
+> temp-app@0.1.0 lint
+> eslint
+
+
+C:\Users\sergi\Proyectos\UME\app\admin\calendar\create-event-dialog.tsx
+  39:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\app\admin\capacity\actions.ts
+  61:56  warning  'path' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\app\admin\capacity\force-sync\route.ts
+   5:28  warning  'request' is defined but never used       @typescript-eslint/no-unused-vars
+  24:19  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\app\admin\capacity\manual-absence-action.ts
+   38:19  warning  'request' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  132:31  error    Unexpected any. Specify a different type      @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\app\admin\capacity\page.tsx
+  39:11  warning  'prevMonth' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  40:11  warning  'nextMonth' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\app\admin\layout.tsx
+   22:44  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   74:29  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  107:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\sergi\Proyectos\UME\app\admin\requests\edit-request-dialog.tsx
+  26:16  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  46:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\app\admin\requests\request-actions.tsx
+  25:16  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  38:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+  55:18  warning  'error' is defined but never used         @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\app\admin\settings\actions.ts
+  25:18  warning  'e' is defined but never used             @typescript-eslint/no-unused-vars
+  29:47  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\app\admin\settings\capacity-actions.ts
+  5:37  warning  'parseISO' is defined but never used    @typescript-eslint/no-unused-vars
+  5:47  warning  'startOfDay' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\app\admin\settings\page.tsx
+   3:10  warning  'Label' is defined but never used         @typescript-eslint/no-unused-vars
+   4:10  warning  'Textarea' is defined but never used      @typescript-eslint/no-unused-vars
+  25:29  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\app\admin\users\[id]\page.tsx
+   42:46  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+   48:30  error    Unexpected any. Specify a different type   @typescript-eslint/no-explicit-any
+  167:43  warning  'isMe' is assigned a value but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\app\admin\users\actions.ts
+  112:17  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\app\admin\users\create-user-dialog.tsx
+  46:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\app\admin\users\edit-user-dialog.tsx
+  53:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\app\admin\users\page.tsx
+  11:10  warning  'Button' is defined but never used        @typescript-eslint/no-unused-vars
+  12:10  warning  'Plus' is defined but never used          @typescript-eslint/no-unused-vars
+  15:10  warning  'Trash' is defined but never used         @typescript-eslint/no-unused-vars
+  16:10  warning  'deleteUser' is defined but never used    @typescript-eslint/no-unused-vars
+  41:39  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  47:46  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  52:30  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\app\auth\signout\route.ts
+  5:28  warning  'request' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\app\user\dashboard\page.tsx
+  45:23  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  57:47  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\app\user\layout.tsx
+  3:35  warning  'LogOut' is defined but never used         @typescript-eslint/no-unused-vars
+  3:55  warning  'MessageSquare' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\app\user\requests\new\page.tsx
+  43:21  error  'invalidDays' is never reassigned. Use 'const' instead  prefer-const
+
+C:\Users\sergi\Proyectos\UME\components\admin\day-details-dialog.tsx
+    8:27   warning  'UserX' is defined but never used         @typescript-eslint/no-unused-vars
+   20:11   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   29:40   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   66:35   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+   95:47   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  100:89   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  108:29   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:59   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  143:100  error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  144:60   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  271:76   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  271:84   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  274:54   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  316:66   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  339:55   error    Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\components\admin\force-sync-button.tsx
+  26:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\components\auth\avatar-upload.tsx
+   51:25  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+   63:25  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+  102:23  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\components\auth\change-password-modal.tsx
+  52:25  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\components\board\board-post.tsx
+  52:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  64:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  81:18  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\components\board\notice-board.tsx
+  55:37  warning  Using `<img>` could result in slower LCP and higher bandwidth. Consider using `<Image />` from `next/image` or a custom image loader to automatically optimize images. This may incur additional usage or cost from your provider. See: https://nextjs.org/docs/messages/no-img-element  @next/next/no-img-element
+
+C:\Users\sergi\Proyectos\UME\components\chat\chat-interface.tsx
+  28:21  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          @typescript-eslint/no-explicit-any
+  67:13  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\sergi\Proyectos\UME\components\chat\chat-interface.tsx:67:13
+  65 |     useEffect(() => {
+  66 |         if (selectedContact) {
+> 67 |             fetchMessages(selectedContact.id)
+     |             ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  68 |         } else {
+  69 |             setMessages([])
+  70 |         }  react-hooks/set-state-in-effect
+
+C:\Users\sergi\Proyectos\UME\components\shared\calendar-view.tsx
+   4:10  warning  'Calendar' is defined but never used                                                                                 @typescript-eslint/no-unused-vars
+   6:10  warning  'Badge' is defined but never used                                                                                    @typescript-eslint/no-unused-vars
+   8:10  warning  'User' is defined but never used                                                                                     @typescript-eslint/no-unused-vars
+   8:28  warning  'CalendarIcon' is defined but never used                                                                             @typescript-eslint/no-unused-vars
+   8:42  warning  'Shield' is defined but never used                                                                                   @typescript-eslint/no-unused-vars
+   8:50  warning  'AlertCircle' is defined but never used                                                                              @typescript-eslint/no-unused-vars
+  11:5   warning  'HoverCard' is defined but never used                                                                                @typescript-eslint/no-unused-vars
+  12:5   warning  'HoverCardContent' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+  13:5   warning  'HoverCardTrigger' is defined but never used                                                                         @typescript-eslint/no-unused-vars
+  18:10  warning  'cn' is defined but never used                                                                                       @typescript-eslint/no-unused-vars
+  33:12  warning  'loading' is assigned a value but never used                                                                         @typescript-eslint/no-unused-vars
+  38:50  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  60:21  error    'current' is never reassigned. Use 'const' instead                                                                   prefer-const
+  67:43  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  68:47  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  70:25  error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+  82:39  error    Unexpected any. Specify a different type                                                                             @typescript-eslint/no-explicit-any
+  84:21  error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free  @typescript-eslint/ban-ts-comment
+
+C:\Users\sergi\Proyectos\UME\components\shared\dashboard-calendar-wrapper.tsx
+   31:50  error    Unexpected any. Specify a different type                                                                                                                                                             @typescript-eslint/no-explicit-any
+   44:13  error    Use "@ts-expect-error" instead of "@ts-ignore", as "@ts-ignore" will do nothing if the following line is error-free                                                                                  @typescript-eslint/ban-ts-comment
+   84:11  warning  The 'updateDayDetails' function makes the dependencies of useEffect Hook (at line 115) change on every render. To fix this, wrap the definition of 'updateDayDetails' in its own useCallback() Hook  react-hooks/exhaustive-deps
+  111:22  warning  'e' is defined but never used                                                                                                                                                                        @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\components\shared\sticky-chat-icon.tsx
+   7:10  warning  'cn' is defined but never used                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           @typescript-eslint/no-unused-vars
+  25:17  error    Error: Cannot access variable before it is declared
+
+`fetchUnreadData` is accessed before it is declared, which prevents the earlier access from updating when this value changes over time.
+
+C:\Users\sergi\Proyectos\UME\components\shared\sticky-chat-icon.tsx:25:17
+  23 |             if (user) {
+  24 |                 setUserId(user.id)
+> 25 |                 fetchUnreadData(user.id)
+     |                 ^^^^^^^^^^^^^^^ `fetchUnreadData` accessed before it is declared
+  26 |             }
+  27 |         }
+  28 |         fetchUser()
+
+C:\Users\sergi\Proyectos\UME\components\shared\sticky-chat-icon.tsx:57:5
+  55 |     }, [userId, supabase])
+  56 |
+> 57 |     const fetchUnreadData = async (id: string) => {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 58 |         // Fetch unread messages with sender info
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 59 |         const { data, error } = await supabase
+     ÔÇª
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 77 |         }
+     | ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+> 78 |     }
+     | ^^^^^^ `fetchUnreadData` is declared here
+  79 |
+  80 |     if (isChatPage) return null
+  81 |  react-hooks/immutability
+  43:52  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  43:74  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+  55:8   warning  React Hook useEffect has a missing dependency: 'fetchUnreadData'. Either include it or remove the dependency array                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       react-hooks/exhaustive-deps
+  73:46  error    Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\components\ui\toast.tsx
+  3:57  warning  'useEffect' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\components\user\activity-feed.tsx
+  89:33  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+  89:52  error  `"` can be escaped with `&quot;`, `&ldquo;`, `&#34;`, `&rdquo;`  react/no-unescaped-entities
+
+C:\Users\sergi\Proyectos\UME\debug_dates.js
+  1:9   warning  'format' is assigned a value but never used    @typescript-eslint/no-unused-vars
+  1:35  warning  'parseISO' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1:48  error    A `require()` style import is forbidden        @typescript-eslint/no-require-imports
+
+C:\Users\sergi\Proyectos\UME\lib\logger.ts
+  2:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  5:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  6:19  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+  7:20  error  Unexpected any. Specify a different type  @typescript-eslint/no-explicit-any
+
+C:\Users\sergi\Proyectos\UME\lib\supabase\server.ts
+  23:30  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+  32:30  warning  'error' is defined but never used  @typescript-eslint/no-unused-vars
+
+C:\Users\sergi\Proyectos\UME\temp_trigger.ts
+  1:9   warning  'regenerateDailyAvailability' is assigned a value but never used  @typescript-eslint/no-unused-vars
+  1:41  error    A `require()` style import is forbidden                           @typescript-eslint/no-require-imports
+
+Ô£û 110 problems (58 errors, 52 warnings)
+  2 errors and 0 warnings potentially fixable with the `--fix` option.
+

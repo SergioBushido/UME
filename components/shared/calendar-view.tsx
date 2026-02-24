@@ -7,11 +7,6 @@ import { Badge } from "@/components/ui/badge"
 import { createClient } from '@/lib/supabase/client'
 import { User, Calendar as CalendarIcon, Shield, AlertCircle } from 'lucide-react'
 import { Button } from "@/components/ui/button"
-import {
-    HoverCard,
-    HoverCardContent,
-    HoverCardTrigger,
-} from "@/components/ui/hover-card"
 import { DayDetailsDialog } from '@/components/admin/day-details-dialog'
 import { getDayDetails } from '@/app/admin/capacity/actions'
 import { format as formatBtn } from 'date-fns'
@@ -20,8 +15,8 @@ import { cn } from '@/lib/utils'
 interface CalendarEvent {
     id: string
     date: Date
-    type: 'PO' | 'DA' | 'AP' | 'guardia' | 'curso' | 'pase_hora'
-    status?: 'pending' | 'approved' | 'rejected'
+    type: string
+    status?: string
     userId: string
     userName: string
     description?: string
@@ -56,8 +51,8 @@ export default function CalendarView() {
             const allEvents: CalendarEvent[] = []
 
             // Process Requests (Date ranges expanded)
-            requests?.forEach(req => {
-                let current = new Date(req.start_date)
+            requests?.forEach((req: any) => {
+                const current = new Date(req.start_date)
                 const end = new Date(req.end_date)
 
                 while (current <= end) {

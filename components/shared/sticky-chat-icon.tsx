@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, useCallback } from 'react'
 import { MessageSquare } from 'lucide-react'
 import { createClient } from '@/lib/supabase/client'
 import { useRouter, usePathname } from 'next/navigation'
@@ -16,6 +16,29 @@ export function StickyChatIcon() {
 
     // Don't show the icon on the chat page itself
     const isChatPage = pathname === '/chat' || pathname.includes('/messages')
+
+    const fetchUnreadData = useCallback(async (id: string) => {
+        // Fetch unread messages with sender info
+        const { data, error } = await supabase
+            .from('messages')
+            .select(`
+                sender_id,
+                profiles:sender_id (full_name)
+            `)
+            .eq('receiver_id', id)
+            .eq('is_read', false)
+
+        if (!error && data) {
+            setUnreadCount(data.length)
+
+            // Get unique sender names
+            const uniqueSenders = Array.from(new Set(
+                data.map(m => (m.profiles as any)?.full_name).filter(Boolean)
+            )) as string[]
+
+            setSenders(uniqueSenders)
+        }
+    }, [supabase])
 
     useEffect(() => {
         const fetchUser = async () => {
@@ -52,30 +75,7 @@ export function StickyChatIcon() {
         return () => {
             supabase.removeChannel(channel)
         }
-    }, [userId, supabase])
-
-    const fetchUnreadData = async (id: string) => {
-        // Fetch unread messages with sender info
-        const { data, error } = await supabase
-            .from('messages')
-            .select(`
-                sender_id,
-                profiles:sender_id (full_name)
-            `)
-            .eq('receiver_id', id)
-            .eq('is_read', false)
-
-        if (!error && data) {
-            setUnreadCount(data.length)
-
-            // Get unique sender names
-            const uniqueSenders = Array.from(new Set(
-                data.map(m => (m.profiles as any)?.full_name).filter(Boolean)
-            )) as string[]
-
-            setSenders(uniqueSenders)
-        }
-    }
+    }, [userId, supabase, fetchUnreadData])
 
     if (isChatPage) return null
 

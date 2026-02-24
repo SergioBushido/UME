@@ -63,11 +63,13 @@ export function ChatInterface({ currentProfile, allProfiles }: ChatInterfaceProp
     }, [currentProfile.id, supabase])
 
     useEffect(() => {
+        let isActive = true
         if (selectedContact) {
             fetchMessages(selectedContact.id)
         } else {
             setMessages([])
         }
+        return () => { isActive = false }
     }, [selectedContact, fetchMessages])
 
     // Real-time subscription
