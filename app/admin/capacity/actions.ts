@@ -44,10 +44,17 @@ export async function getDayDetails(date: string) {
         `)
         .eq('date', date)
 
+    // 4. Fetch ALL profiles to calculate presence
+    const { data: allProfiles } = await supabase
+        .from('profiles')
+        .select('id, full_name, role, section')
+        .order('full_name')
+
     return {
         capacity,
         requests: requests || [],
-        events: events || []
+        events: events || [],
+        allProfiles: allProfiles || []
     }
 }
 

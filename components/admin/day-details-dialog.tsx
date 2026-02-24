@@ -10,6 +10,8 @@ import { useState, useTransition } from "react"
 import { revokeRequest } from "@/app/admin/capacity/actions"
 import { toast } from "sonner"
 import { cn } from "@/lib/utils"
+import { Badge } from "@/components/ui/badge"
+import { Shield } from "lucide-react"
 
 interface DayDetailsProps {
     date: Date | null
@@ -132,58 +134,68 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
         })
     }
 
-    const { capacity, requests, events } = data || {}
+    const { capacity, requests, events, allProfiles } = data || {}
     const total = capacity?.total_staff || 0
     const max = capacity?.max_absence || 0
     const approved = capacity?.approved_count || 0
 
+    // Calculate present personnel
+    const absentIds = new Set((requests || []).filter((r: any) => r.status !== 'rejected').map((r: any) => r.user_id))
+    const presentProfiles = (allProfiles || []).filter((p: any) => !absentIds.has(p.id))
+
     return (
         <Dialog open={isOpen} onOpenChange={(open) => !open && onClose()}>
-            <DialogContent className="max-w-md">
-                <DialogHeader>
-                    <DialogTitle>
-                        {date ? format(date, "d 'de' MMMM, yyyy") : 'Selecciona una fecha'}
-                    </DialogTitle>
-                    <DialogDescription>
-                        Administrar ausencias y capacidad.
-                    </DialogDescription>
-                </DialogHeader>
+            <DialogContent className="max-w-md max-h-[90vh] flex flex-col p-0 overflow-hidden gap-0">
+                <div className="p-6 pb-2">
+                    <DialogHeader>
+                        <DialogTitle>
+                            {date ? format(date, "d 'de' MMMM, yyyy", { locale: es }) : 'Selecciona una fecha'}
+                        </DialogTitle>
+                        <DialogDescription>
+                            Administrar presencia y ausencias del personal.
+                        </DialogDescription>
+                    </DialogHeader>
+                </div>
 
                 {isLoading ? (
-                    <div className="flex justify-center p-4">
-                        <Loader2 className="h-6 w-6 animate-spin" />
+                    <div className="flex justify-center p-8">
+                        <Loader2 className="h-8 w-8 animate-spin text-primary" />
                     </div>
                 ) : (
-                    <div className="space-y-4">
+                    <div className="flex-1 overflow-y-auto p-6 pt-2 space-y-6">
                         {/* Summary Stats */}
                         <div className="grid grid-cols-3 gap-2 text-center text-sm">
-                            <div className="bg-muted p-2 rounded">
-                                <span className="block text-muted-foreground text-xs">Plantilla</span>
-                                <span className="font-bold">{total}</span>
+                            <div className="bg-muted p-2 rounded border border-border/50 shadow-sm">
+                                <span className="block text-muted-foreground text-[10px] uppercase font-bold tracking-tight">Plantilla</span>
+                                <span className="font-bold text-lg">{allProfiles?.length || total}</span>
                             </div>
-                            <div className="bg-muted p-2 rounded">
-                                <span className="block text-muted-foreground text-xs">Cupo Máx</span>
-                                <span className="font-bold">{max}</span>
+                            <div className="bg-muted p-2 rounded border border-border/50 shadow-sm">
+                                <span className="block text-muted-foreground text-[10px] uppercase font-bold tracking-tight">Cupo Máx</span>
+                                <span className="font-bold text-lg">{max}</span>
                             </div>
-                            <div className={approved > max ? "bg-red-100 p-2 rounded text-red-700" : "bg-green-100 p-2 rounded text-green-700"}>
-                                <span className="block text-xs opacity-80">Ocupado</span>
-                                <span className="font-bold">{approved}</span>
+                            <div className={cn(
+                                "p-2 rounded border shadow-sm transition-colors",
+                                approved > max ? "bg-red-500/10 text-red-600 border-red-200" : "bg-green-500/10 text-green-600 border-green-200"
+                            )}>
+                                <span className="block text-[10px] uppercase font-bold tracking-tight opacity-80">Ausentes</span>
+                                <span className="font-bold text-lg">{approved}</span>
                             </div>
                         </div>
 
                         {isAdding ? (
-                            <div className="bg-muted/30 p-4 rounded-md space-y-3 border">
-                                <h4 className="font-medium text-sm">
+                            <div className="bg-muted/30 p-4 rounded-xl space-y-3 border border-primary/20 shadow-inner">
+                                <h4 className="font-bold text-sm text-primary flex items-center gap-2">
+                                    <Pencil className="h-4 w-4" />
                                     {editingId ? 'Editar Ausencia' : 'Añadir Ausencia Manual'}
                                 </h4>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-medium">Personal</label>
+                                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-tighter">Personal</label>
                                     <select
-                                        className="w-full text-sm border rounded p-2 bg-background"
+                                        className="w-full text-sm border rounded-lg p-2.5 bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                         value={selectedUser}
                                         onChange={e => setSelectedUser(e.target.value)}
-                                        disabled={!!editingId} // Disable user change on edit
+                                        disabled={!!editingId}
                                     >
                                         <option value="">Seleccionar empleado...</option>
                                         {users.map(u => (
@@ -193,9 +205,9 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
                                 </div>
 
                                 <div className="space-y-1">
-                                    <label className="text-xs font-medium">Tipo</label>
+                                    <label className="text-xs font-bold uppercase text-muted-foreground tracking-tighter">Tipo de Ausencia</label>
                                     <select
-                                        className="w-full text-sm border rounded p-2 bg-background"
+                                        className="w-full text-sm border rounded-lg p-2.5 bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                         value={selectedType}
                                         onChange={e => setSelectedType(e.target.value)}
                                     >
@@ -205,21 +217,21 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
                                     </select>
                                 </div>
 
-                                <div className="grid grid-cols-2 gap-2">
+                                <div className="grid grid-cols-2 gap-3">
                                     <div className="space-y-1">
-                                        <label className="text-xs font-medium">Desde</label>
+                                        <label className="text-xs font-bold uppercase text-muted-foreground tracking-tighter">Desde</label>
                                         <input
                                             type="date"
-                                            className="w-full text-sm border rounded p-2 bg-background"
+                                            className="w-full text-sm border rounded-lg p-2.5 bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             value={startDate}
                                             onChange={e => setStartDate(e.target.value)}
                                         />
                                     </div>
                                     <div className="space-y-1">
-                                        <label className="text-xs font-medium">Hasta</label>
+                                        <label className="text-xs font-bold uppercase text-muted-foreground tracking-tighter">Hasta</label>
                                         <input
                                             type="date"
-                                            className="w-full text-sm border rounded p-2 bg-background"
+                                            className="w-full text-sm border rounded-lg p-2.5 bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                             value={endDate}
                                             onChange={e => setEndDate(e.target.value)}
                                         />
@@ -227,95 +239,109 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
                                 </div>
 
                                 <div className="flex gap-2 justify-end pt-2">
-                                    <Button variant="ghost" size="sm" onClick={handleCancelForm}>Cancelar</Button>
-                                    <Button size="sm" onClick={handleSubmit} disabled={isPending || !selectedUser}>
+                                    <Button variant="ghost" size="sm" onClick={handleCancelForm} className="rounded-full">Cancelar</Button>
+                                    <Button size="sm" onClick={handleSubmit} disabled={isPending || !selectedUser} className="rounded-full px-6">
                                         {isPending && <Loader2 className="mr-2 h-3 w-3 animate-spin" />}
                                         {editingId ? 'Actualizar' : 'Guardar'}
                                     </Button>
                                 </div>
                             </div>
                         ) : (
-                            <Button className="w-full" variant="outline" onClick={handleStartAdd}>
-                                + Incluir Personal
+                            <Button className="w-full rounded-xl border-dashed py-6 group hover:border-primary transition-all" variant="outline" onClick={handleStartAdd}>
+                                <div className="flex items-center gap-2 group-hover:scale-105 transition-transform">
+                                    <span className="text-lg">+</span>
+                                    <span className="font-bold">Registrar Ausencia Manual</span>
+                                </div>
                             </Button>
                         )}
 
-                        {/* Requests List */}
-                        <div>
-                            <h4 className="font-medium mb-2 text-sm flex items-center gap-2">
-                                <UserX className="h-4 w-4" />
+                        {/* Absent List */}
+                        <div className="space-y-3">
+                            <h4 className="font-black text-xs uppercase tracking-widest text-red-600 flex items-center gap-2 px-1">
+                                <div className="h-1.5 w-1.5 rounded-full bg-red-600 animate-pulse" />
                                 Personal Ausente
                             </h4>
-                            <div className="h-[200px] border rounded-md p-2 overflow-y-auto">
+                            <div className="space-y-2">
                                 {requests?.length === 0 ? (
-                                    <p className="text-sm text-muted-foreground text-center py-4">
-                                        No hay ausencias aprobadas para este día.
-                                    </p>
+                                    <div className="text-center py-6 bg-muted/20 rounded-xl border border-dashed border-border/50">
+                                        <p className="text-xs text-muted-foreground italic">No hay ausencias para hoy.</p>
+                                    </div>
                                 ) : (
-                                    <ul className="space-y-2">
+                                    <div className="space-y-2">
                                         {(requests || []).slice().sort((a: any, b: any) => {
                                             const score = (s: string) => (s === 'approved' ? 0 : s === 'pending' ? 1 : 2)
-                                            const sa = score(a.status)
-                                            const sb = score(b.status)
-                                            if (sa !== sb) return sa - sb
-                                            if (a.created_at && b.created_at) return new Date(b.created_at).getTime() - new Date(a.created_at).getTime()
-                                            return 0
+                                            return score(a.status) - score(b.status)
                                         }).map((req: any) => (
-                                            <li key={req.id} className="flex items-center justify-between text-sm p-2 bg-card border rounded shadow-sm">
-                                                <div>
-                                                    <p className="font-medium">
-                                                        {req.profiles?.full_name}
-                                                        <span className={cn(
-                                                            "ml-2 text-[10px] px-1.5 py-0.5 rounded-full border border-current",
-                                                            req.status === 'approved' ? "text-green-600 bg-green-50 border-green-200" :
-                                                                req.status === 'pending' ? "text-yellow-600 bg-yellow-50 border-yellow-200" :
-                                                                    "text-red-600 bg-red-50 border-red-200"
+                                            <div key={req.id} className="flex items-center justify-between p-3 bg-card border border-red-100 dark:border-red-900/30 rounded-xl shadow-sm group hover:shadow-md transition-all">
+                                                <div className="min-w-0">
+                                                    <div className="flex items-center gap-2">
+                                                        <p className="font-bold text-sm truncate">{req.profiles?.full_name}</p>
+                                                        <Badge variant="outline" className={cn(
+                                                            "text-[9px] px-1.5 py-0 rounded-full font-bold uppercase tracking-tighter transition-colors",
+                                                            req.status === 'approved' ? "text-green-600 border-green-200 bg-green-50" : "text-amber-600 border-amber-200 bg-amber-50"
                                                         )}>
-                                                            {req.status === 'approved' ? 'Aprobado' : req.status === 'pending' ? 'Pendiente' : 'Rechazado'}
-                                                        </span>
-                                                    </p>
-                                                    <p className="text-xs text-muted-foreground">
-                                                        {req.type} • {format(new Date(req.start_date), 'd MMM')} - {format(new Date(req.end_date), 'd MMM')}
+                                                            {req.type} {req.status === 'approved' ? 'OK' : 'PND'}
+                                                        </Badge>
+                                                    </div>
+                                                    <p className="text-[10px] text-muted-foreground mt-0.5">
+                                                        {format(new Date(req.start_date), 'd MMM')} - {format(new Date(req.end_date), 'd MMM')}
                                                     </p>
                                                 </div>
-                                                <div className="flex gap-1">
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-blue-600 hover:bg-blue-50"
-                                                        onClick={() => handleStartEdit(req)}
-                                                        disabled={isPending}
-                                                    >
-                                                        <Pencil className="h-4 w-4" />
+                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 rounded-full" onClick={() => handleStartEdit(req)} disabled={isPending}>
+                                                        <Pencil className="h-3.5 w-3.5" />
                                                     </Button>
-                                                    <Button
-                                                        variant="ghost"
-                                                        size="icon"
-                                                        className="h-8 w-8 text-destructive hover:bg-destructive/10"
-                                                        onClick={() => handleRevoke(req.id)}
-                                                        disabled={isPending}
-                                                    >
-                                                        {isPending ? <Loader2 className="h-4 w-4 animate-spin" /> : <Trash2 className="h-4 w-4" />}
+                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 rounded-full" onClick={() => handleRevoke(req.id)} disabled={isPending}>
+                                                        <Trash2 className="h-3.5 w-3.5" />
                                                     </Button>
                                                 </div>
-                                            </li>
+                                            </div>
                                         ))}
-                                    </ul>
+                                    </div>
                                 )}
                             </div>
                         </div>
 
-                        {/* Special Events List (ReadOnly) */}
+                        {/* Present List */}
+                        <div className="space-y-3">
+                            <h4 className="font-black text-xs uppercase tracking-widest text-green-600 flex items-center gap-2 px-1">
+                                <div className="h-1.5 w-1.5 rounded-full bg-green-600" />
+                                Personal Presente
+                            </h4>
+                            <div className="bg-muted/30 rounded-xl border border-border/50 p-1">
+                                {presentProfiles.length === 0 ? (
+                                    <p className="text-xs text-muted-foreground text-center py-4 italic">No hay personal disponible hoy.</p>
+                                ) : (
+                                    <div className="grid grid-cols-1 gap-1">
+                                        {presentProfiles.map((p: any) => (
+                                            <div key={p.id} className="flex items-center justify-between p-2.5 px-3 rounded-lg hover:bg-background transition-colors">
+                                                <div className="flex items-center gap-3">
+                                                    <div className="h-6 w-6 rounded-full bg-green-500/10 flex items-center justify-center">
+                                                        <Shield className="h-3 w-3 text-green-600" />
+                                                    </div>
+                                                    <span className="text-sm font-medium">{p.full_name}</span>
+                                                </div>
+                                                <span className="text-[9px] font-black uppercase text-muted-foreground bg-muted px-1.5 py-0.5 rounded tracking-tighter">
+                                                    {p.section}
+                                                </span>
+                                            </div>
+                                        ))}
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+
+                        {/* Event list as simple badge-like list if present */}
                         {events?.length > 0 && (
-                            <div>
-                                <h4 className="font-medium mb-2 text-sm">Eventos / Guardias</h4>
-                                <ul className="text-sm space-y-1">
+                            <div className="pt-2 border-t">
+                                <h4 className="font-bold text-[10px] uppercase text-muted-foreground mb-2 px-1">Eventos del Día</h4>
+                                <div className="flex flex-wrap gap-1.5">
                                     {events.map((evt: any) => (
-                                        <li key={evt.id} className="text-muted-foreground bg-muted/50 p-1 rounded px-2">
-                                            {evt.profiles?.full_name} - {evt.type}
-                                        </li>
+                                        <div key={evt.id} className="text-[9px] bg-amber-500/10 text-amber-700 border border-amber-200 px-2 py-0.5 rounded-full font-bold">
+                                            {evt.profiles?.full_name}: {evt.type}
+                                        </div>
                                     ))}
-                                </ul>
+                                </div>
                             </div>
                         )}
                     </div>

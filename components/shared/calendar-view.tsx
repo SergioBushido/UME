@@ -12,6 +12,10 @@ import {
     HoverCardContent,
     HoverCardTrigger,
 } from "@/components/ui/hover-card"
+import { DayDetailsDialog } from '@/components/admin/day-details-dialog'
+import { getDayDetails } from '@/app/admin/capacity/actions'
+import { format as formatBtn } from 'date-fns'
+import { cn } from '@/lib/utils'
 
 interface CalendarEvent {
     id: string
@@ -27,6 +31,12 @@ export default function CalendarView() {
     const [date, setDate] = useState<Date | undefined>(new Date())
     const [events, setEvents] = useState<CalendarEvent[]>([])
     const [loading, setLoading] = useState(true)
+
+    // Dialog State
+    const [selectedDate, setSelectedDate] = useState<Date | null>(null)
+    const [isDialogOpen, setIsDialogOpen] = useState(false)
+    const [dayDetails, setDayDetails] = useState<any>(null)
+    const [isDetailsLoading, setIsDetailsLoading] = useState(false)
 
     useEffect(() => {
         const fetchEvents = async () => {
@@ -84,6 +94,35 @@ export default function CalendarView() {
         fetchEvents()
     }, [])
 
+    const handleDayClick = async (day: Date) => {
+        setSelectedDate(day)
+        setIsDialogOpen(true)
+        setIsDetailsLoading(true)
+
+        try {
+            const details = await getDayDetails(formatBtn(day, 'yyyy-MM-dd'))
+            setDayDetails(details)
+        } catch (e) {
+            console.error(e)
+            setDayDetails(null)
+        } finally {
+            setIsDetailsLoading(false)
+        }
+    }
+
+    const updateDayDetails = async () => {
+        if (!selectedDate) return
+        setIsDetailsLoading(true)
+        try {
+            const details = await getDayDetails(formatBtn(selectedDate, 'yyyy-MM-dd'))
+            setDayDetails(details)
+            // Also refresh main calendar data
+            // (In a real app we might want to refetch all events here)
+        } finally {
+            setIsDetailsLoading(false)
+        }
+    }
+
     const getEventsForDate = (day: Date) => {
         return events.filter(e =>
             e.date.getDate() === day.getDate() &&
@@ -134,13 +173,17 @@ export default function CalendarView() {
                                 const dayEvents = getEventsForDate(dayDate)
 
                                 return (
-                                    <div key={d} className="h-20 sm:h-32 border border-border rounded-md p-1 overflow-y-auto bg-card hover:bg-accent/50 transition-colors relative flex flex-col">
-                                        <span className="font-bold text-[10px] sm:text-sm text-muted-foreground block mb-1 sticky top-0 bg-card/80 backdrop-blur-sm z-10">{d}</span>
+                                    <div
+                                        key={d}
+                                        onClick={() => handleDayClick(dayDate)}
+                                        className="h-20 sm:h-32 border border-border rounded-md p-1 overflow-y-auto bg-card hover:bg-accent/50 cursor-pointer transition-all relative flex flex-col group"
+                                    >
+                                        <span className="font-bold text-[10px] sm:text-sm text-muted-foreground block mb-1 sticky top-0 bg-card/80 backdrop-blur-sm z-10 group-hover:text-primary transition-colors">{d}</span>
                                         <div className="space-y-0.5 sm:space-y-1 flex-1">
                                             {dayEvents.map((evt, idx) => (
                                                 <div
                                                     key={`${evt.id}-${idx}`}
-                                                    className={`text-[8px] sm:text-[10px] p-0.5 sm:p-1 rounded truncate cursor-help font-medium border leading-tight
+                                                    className={`text-[8px] sm:text-[10px] p-0.5 sm:p-1 rounded truncate font-medium border leading-tight
                                                         ${evt.status === 'pending' ? 'opacity-70 border-dashed' : ''}
                                                         ${evt.type === 'PO' ? 'bg-blue-100/50 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-100 dark:border-blue-800' : ''}
                                                         ${evt.type === 'DA' ? 'bg-purple-100/50 text-purple-700 border-purple-200 dark:bg-purple-900/50 dark:text-purple-100 dark:border-purple-800' : ''}
@@ -159,6 +202,14 @@ export default function CalendarView() {
                         </div>
                     </div>
                 </div>
+                <DayDetailsDialog
+                    isOpen={isDialogOpen}
+                    onClose={() => setIsDialogOpen(false)}
+                    date={selectedDate}
+                    data={dayDetails}
+                    isLoading={isDetailsLoading}
+                    onUpdate={updateDayDetails}
+                />
             </CardContent>
         </Card>
     )
