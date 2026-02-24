@@ -5,6 +5,7 @@ import { createClient } from '@/lib/supabase/client'
 import { ChatSidebar } from './sidebar'
 import { ChatConversation } from './conversation'
 import { markAsRead } from '../../app/chat/actions'
+import { cn } from '@/lib/utils'
 
 interface Profile {
     id: string
@@ -32,7 +33,18 @@ export function ChatInterface({ currentProfile, allProfiles }: ChatInterfaceProp
     const [selectedContact, setSelectedContact] = useState<Profile | null>(null)
     const [messages, setMessages] = useState<Message[]>([])
     const [loading, setLoading] = useState(false)
+    const [isMobile, setIsMobile] = useState(false)
     const supabase = createClient()
+
+    // Detect mobile view
+    useEffect(() => {
+        const checkMobile = () => {
+            setIsMobile(window.innerWidth < 768)
+        }
+        checkMobile()
+        window.addEventListener('resize', checkMobile)
+        return () => window.removeEventListener('resize', checkMobile)
+    }, [])
 
     const fetchMessages = useCallback(async (contactId: string) => {
         setLoading(true)
@@ -101,21 +113,32 @@ export function ChatInterface({ currentProfile, allProfiles }: ChatInterfaceProp
     }, [currentProfile.id, selectedContact, supabase])
 
     return (
-        <div className="flex flex-1 overflow-hidden h-full">
-            <ChatSidebar
-                profiles={allProfiles}
-                selectedId={selectedContact?.id}
-                onSelect={setSelectedContact}
-                currentUserId={currentProfile.id}
-            />
+        <div className="flex flex-1 overflow-hidden h-full relative">
+            {/* Sidebar - hidden on mobile if contact selected */}
+            <div className={cn(
+                "h-full shrink-0 border-r transition-all duration-300",
+                isMobile ? (selectedContact ? "hidden" : "w-full") : "w-80"
+            )}>
+                <ChatSidebar
+                    profiles={allProfiles}
+                    selectedId={selectedContact?.id}
+                    onSelect={setSelectedContact}
+                    currentUserId={currentProfile.id}
+                />
+            </div>
 
-            <div className="flex-1 flex flex-col bg-muted/5">
+            {/* Conversation Area - hidden on mobile if no contact selected */}
+            <div className={cn(
+                "flex-1 flex flex-col bg-muted/5 transition-all duration-300",
+                isMobile && !selectedContact ? "hidden" : "flex"
+            )}>
                 {selectedContact ? (
                     <ChatConversation
                         contact={selectedContact}
                         messages={messages}
                         currentUserId={currentProfile.id}
                         loading={loading}
+                        onBack={isMobile ? () => setSelectedContact(null) : undefined}
                     />
                 ) : (
                     <div className="flex-1 flex flex-col items-center justify-center text-muted-foreground p-8 text-center">

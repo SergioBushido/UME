@@ -37,11 +37,15 @@ export function CreateUserDialog() {
         const section = formData.get('section') as string
 
         try {
-            await createUser({ email, fullName, password, po, da, ap, section })
-            setOpen(false)
-        } catch (err) {
+            const result = await createUser({ email, fullName, password, po, da, ap, section })
+            if (result && 'error' in result) {
+                setError(result.error as string)
+            } else {
+                setOpen(false)
+            }
+        } catch (err: any) {
             console.error(err)
-            setError(err instanceof Error ? err.message : 'Error al crear usuario')
+            setError(err?.message || 'Error al crear usuario')
         } finally {
             setLoading(false)
         }

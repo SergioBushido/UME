@@ -1,7 +1,7 @@
 'use client'
 
 import React, { useState, useRef, useEffect } from 'react'
-import { Send, User as UserIcon, Shield, MoreVertical, Loader2 } from 'lucide-react'
+import { Send, User as UserIcon, Shield, MoreVertical, Loader2, ChevronLeft } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { format } from 'date-fns'
@@ -32,11 +32,12 @@ interface ChatConversationProps {
     messages: Message[]
     currentUserId: string
     loading: boolean
+    onBack?: () => void
 }
 
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 
-export function ChatConversation({ contact, messages, currentUserId, loading }: ChatConversationProps) {
+export function ChatConversation({ contact, messages, currentUserId, loading, onBack }: ChatConversationProps) {
     const [input, setInput] = useState('')
     const [sending, setSending] = useState(false)
     const scrollRef = useRef<HTMLDivElement>(null)
@@ -69,17 +70,22 @@ export function ChatConversation({ contact, messages, currentUserId, loading }: 
     return (
         <div className="flex flex-col h-full bg-background relative">
             {/* Header */}
-            <div className="p-4 border-b flex items-center justify-between bg-card shrink-0">
-                <div className="flex items-center gap-3 min-w-0">
+            <div className="p-3 md:p-4 border-b flex items-center justify-between bg-card shrink-0 shadow-sm z-10">
+                <div className="flex items-center gap-2 md:gap-3 min-w-0">
+                    {onBack && (
+                        <Button variant="ghost" size="icon" onClick={onBack} className="md:hidden -ml-2">
+                            <ChevronLeft className="h-6 w-6" />
+                        </Button>
+                    )}
                     <Avatar className={cn(
-                        "h-10 w-10 border shadow-sm",
+                        "h-8 w-8 md:h-10 md:w-10 border shadow-sm",
                         contact.role === 'admin' ? "border-primary/20" : "border-border"
                     )}>
                         <AvatarImage src={contact.avatar_url} />
                         <AvatarFallback className={cn(
                             contact.role === 'admin' ? "bg-primary/10 text-primary" : "bg-muted"
                         )}>
-                            {contact.role === 'admin' ? <Shield className="h-5 w-5" /> : <UserIcon className="h-5 w-5" />}
+                            {contact.role === 'admin' ? <Shield className="h-4 w-4 md:h-5 md:w-5" /> : <UserIcon className="h-4 w-4 md:h-5 md:w-5" />}
                         </AvatarFallback>
                     </Avatar>
                     <div className="min-w-0">
