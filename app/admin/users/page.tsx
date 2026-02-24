@@ -16,6 +16,7 @@ import { Trash } from "lucide-react"
 import { deleteUser } from './actions'
 import Link from 'next/link'
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { DeleteUserButton } from './delete-user-button'
 
 export default async function UsersPage() {
     const supabase = await createClient()
@@ -49,8 +50,13 @@ export default async function UsersPage() {
         let scheduled = 0
 
         approved.forEach((r: any) => {
+            if (!r.start_date || !r.end_date) return
+
             const start = new Date(r.start_date)
             const end = new Date(r.end_date)
+
+            if (isNaN(start.getTime()) || isNaN(end.getTime())) return
+
             const diffTime = Math.abs(end.getTime() - start.getTime())
             const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1
 
@@ -106,7 +112,7 @@ export default async function UsersPage() {
                                             <Avatar className="h-9 w-9 border border-border shadow-sm">
                                                 <AvatarImage src={profile.avatar_url} />
                                                 <AvatarFallback className="text-[10px] bg-muted">
-                                                    {profile.full_name?.substring(0, 2).toUpperCase() || 'U'}
+                                                    {(profile.full_name?.substring(0, 2) || profile.email?.substring(0, 2) || 'U').toUpperCase()}
                                                 </AvatarFallback>
                                             </Avatar>
                                             <Link href={`/admin/users/${profile.id}`} className="hover:underline text-primary font-bold">
@@ -157,14 +163,10 @@ export default async function UsersPage() {
                                     <TableCell className="text-right">
                                         <div className="flex justify-end gap-2">
                                             <EditUserDialog user={profile} />
-                                            <form action={async () => {
-                                                'use server'
-                                                await deleteUser(profile.id)
-                                            }}>
-                                                <Button size="sm" variant="destructive" type="submit">
-                                                    <Trash className="h-4 w-4" />
-                                                </Button>
-                                            </form>
+                                            <DeleteUserButton
+                                                userId={profile.id}
+                                                userName={profile.full_name || profile.email}
+                                            />
                                         </div>
                                     </TableCell>
                                 </TableRow>

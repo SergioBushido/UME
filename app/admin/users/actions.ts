@@ -68,22 +68,24 @@ export async function createUser(data: { email: string, fullName: string, passwo
 
     if (!newUser.user) throw new Error('Error al crear usuario')
 
-    // Update profile with quotas and section
-    const { error: updateError } = await adminSupabase
+    // Use upsert to handle case where profile trigger hasn't finished
+    // and explicitly set full_name from data.fullName
+    const { error: profileError } = await adminSupabase
         .from('profiles')
-        .update({
+        .upsert({
+            id: newUser.user.id,
+            email: data.email,
+            full_name: data.fullName,
             balance_po: data.po,
             balance_da: data.da,
             balance_ap: data.ap,
-            section: data.section
+            section: data.section,
+            role: 'user' // Default to user on creation
         })
-        .eq('id', newUser.user.id)
 
-    if (updateError) {
-        console.error('Error updating profile:', updateError)
-        // If profile update fails, we might want to delete the user? 
-        // For now, just throw.
-        throw new Error('Usuario creado pero error al asignar cuotas/sección')
+    if (profileError) {
+        console.error('Error upserting profile:', profileError)
+        throw new Error('Usuario creado pero error al asignar perfil/cuotas: ' + profileError.message)
     }
 
     revalidatePath('/admin/users')
