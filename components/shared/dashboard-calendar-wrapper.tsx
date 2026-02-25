@@ -24,6 +24,7 @@ export function DashboardCalendarWrapper({
     const [currentMonth, setCurrentMonth] = useState(initialMonth)
     const [availability, setAvailability] = useState(initialAvailability)
     const [isLoading, setIsLoading] = useState(false)
+    const [currentUser, setCurrentUser] = useState<{ id: string, role: string } | null>(null)
 
     // Dialog State
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
@@ -94,12 +95,28 @@ export function DashboardCalendarWrapper({
         }
     }
 
-    // Real-time: subscribe to `requests` changes and refresh availability/day details
+    useEffect(() => {
+        const fetchUser = async () => {
+            const supabase = createBrowserSupabase()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data: p } = await supabase.from('profiles').select('id, role').eq('id', user.id).single()
+                setCurrentUser(p)
+            }
+        }
+        fetchUser()
+    }, [])
+
+    // Real-time: subscribe to `requests` and `special_events` changes and refresh availability/day details
     useEffect(() => {
         const supabase = createBrowserSupabase()
         const channel = supabase
-            .channel('public:requests')
+            .channel('dashboard_calendar_sync')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, () => {
+                fetchAvailability(currentMonth)
+                if (selectedDate) updateDayDetails()
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'special_events' }, () => {
                 fetchAvailability(currentMonth)
                 if (selectedDate) updateDayDetails()
             })
@@ -145,6 +162,7 @@ export function DashboardCalendarWrapper({
                     data={dayDetails}
                     isLoading={isDetailsLoading}
                     onUpdate={updateDayDetails}
+                    currentUser={currentUser}
                 />
             )}
         </div>

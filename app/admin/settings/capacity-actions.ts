@@ -140,6 +140,14 @@ export async function regenerateDailyAvailability(start: Date, end: Date) {
         .lte('start_date', format(end, 'yyyy-MM-dd'))
         .gte('end_date', format(start, 'yyyy-MM-dd'))
 
+    // 2.2 Fetch special events of type 'curso' as they also count as absences
+    const { data: specialAbsences } = await supabase
+        .from('special_events')
+        .select('user_id, date')
+        .eq('type', 'curso')
+        .lte('date', format(end, 'yyyy-MM-dd'))
+        .gte('date', format(start, 'yyyy-MM-dd'))
+
     // 1.5 Fetch blocked weeks
     const { data: blockedSettings } = await supabase
         .from('system_settings')
@@ -159,6 +167,11 @@ export async function regenerateDailyAvailability(start: Date, end: Date) {
         approvedRequests?.forEach(r => {
             if (dateStr >= r.start_date && dateStr <= r.end_date) {
                 if (r.user_id) usersSet.add(r.user_id)
+            }
+        })
+        specialAbsences?.forEach(s => {
+            if (dateStr === s.date) {
+                if (s.user_id) usersSet.add(s.user_id)
             }
         })
 

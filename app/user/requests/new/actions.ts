@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 
@@ -13,6 +14,8 @@ export async function createRequest(formData: FormData) {
     const type = formData.get('type') as string
     const start_date = formData.get('start_date') as string
     const end_date = formData.get('end_date') as string
+    const target_user_id = formData.get('target_user_id') as string
+    const auto_approve = formData.get('auto_approve') === 'true'
 
     if (!type || !start_date || !end_date) {
         throw new Error('Todos los campos son obligatorios')
@@ -26,8 +29,13 @@ export async function createRequest(formData: FormData) {
         throw new Error('La fecha de fin no puede ser anterior a la de inicio')
     }
 
-    // Check balance? (Optional hard constraint, or just check logic)
-    const { data: profile } = await supabase.from('profiles').select('*').eq('id', user.id).single()
+    // Check permissions and effective user
+    const { data: ownProfile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const isAdmin = ownProfile?.role === 'admin'
+    const effectiveUserId = (isAdmin && target_user_id) ? target_user_id : user.id
+
+    const { data: targetProfile } = await supabase.from('profiles').select('*').eq('id', effectiveUserId).single()
+    if (!targetProfile) throw new Error('Usuario objetivo no encontrado')
 
     const diffTime = Math.abs(end.getTime() - start.getTime());
     const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
@@ -69,16 +77,21 @@ export async function createRequest(formData: FormData) {
         current.setDate(current.getDate() + 1)
     }
 
-    // Check balance
-    if (type === 'PO' && (profile.balance_po || 0) < diffDays) throw new Error(`Saldo insuficiente de PO. Disponibles: ${profile.balance_po}, Solicitados: ${diffDays}`)
-    if (type === 'DA' && (profile.balance_da || 0) < diffDays) throw new Error(`Saldo insuficiente de DA. Disponibles: ${profile.balance_da}, Solicitados: ${diffDays}`)
-    if (type === 'AP' && (profile.balance_ap || 0) < diffDays) throw new Error(`Saldo insuficiente de AP. Disponibles: ${profile.balance_ap}, Solicitados: ${diffDays}`)
+    // Check balance - Skip for 'DO'
+    if (type !== 'DO') {
+        if (type === 'PO' && (targetProfile.balance_po || 0) < diffDays) throw new Error(`Saldo insuficiente de PO. Disponibles: ${targetProfile.balance_po}, Solicitados: ${diffDays}`)
+        if (type === 'DA' && (targetProfile.balance_da || 0) < diffDays) throw new Error(`Saldo insuficiente de DA. Disponibles: ${targetProfile.balance_da}, Solicitados: ${diffDays}`)
+        if (type === 'AP' && (targetProfile.balance_ap || 0) < diffDays) throw new Error(`Saldo insuficiente de AP. Disponibles: ${targetProfile.balance_ap}, Solicitados: ${diffDays}`)
+    } else {
+        // Only admins can create 'DO'
+        if (!isAdmin) throw new Error('No autorizado para crear Descanso Obligatorio')
+    }
 
     // Prevent overlapping requests of a different type (or duplicates) for the same user
     const { data: overlapping } = await supabase
         .from('requests')
         .select('id, type, start_date, end_date, status')
-        .eq('user_id', user.id)
+        .eq('user_id', effectiveUserId)
         .neq('status', 'cancelled')
         .lte('start_date', end_date)
         .gte('end_date', start_date)
@@ -88,18 +101,49 @@ export async function createRequest(formData: FormData) {
         throw new Error('Ya existe una solicitud solapada para estas fechas. No se permiten múltiples permisos en el mismo día.')
     }
 
-    const { error } = await supabase.from('requests').insert({
-        user_id: user.id,
-        type,
-        start_date,
-        end_date,
-        status: 'pending'
-    })
+    const effectiveSupabase = isAdmin ? createAdminClient() : supabase
+
+    const { data: insertedRequest, error } = await effectiveSupabase
+        .from('requests')
+        .insert({
+            user_id: effectiveUserId,
+            type,
+            start_date,
+            end_date,
+            status: 'pending'
+        })
+        .select()
+        .single()
 
     if (error) {
         throw new Error('Error al crear la solicitud: ' + error.message)
     }
 
+    // Auto-approve if requested by admin
+    if (isAdmin && auto_approve && insertedRequest) {
+        const { error: approvalError } = await supabase.rpc('approve_request_with_capacity', { request_id: insertedRequest.id })
+        if (approvalError) {
+            console.error('Failed to auto-approve admin request:', approvalError)
+            // We don't throw here to avoid user confusion, but could be logged or returned in state
+        }
+
+        // Regenerate availability
+        try {
+            const { regenerateDailyAvailability } = await import('@/app/admin/settings/capacity-actions')
+            await regenerateDailyAvailability(new Date(start_date), new Date(end_date))
+        } catch (e) {
+            console.error('Failed to regenerate availability after admin auto-approval:', e)
+        }
+    }
+
     revalidatePath('/user/requests')
-    redirect('/user/requests')
+    revalidatePath('/user/dashboard')
+    revalidatePath('/admin/dashboard')
+    revalidatePath('/admin/requests')
+
+    if (isAdmin) {
+        redirect('/admin/requests')
+    } else {
+        redirect('/user/dashboard')
+    }
 }

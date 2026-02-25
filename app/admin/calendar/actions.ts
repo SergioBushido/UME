@@ -31,6 +31,17 @@ export async function createSpecialEvent(formData: FormData) {
         throw new Error('Error al crear evento')
     }
 
+    // Regenerate daily availability if it's a course
+    if (type === 'curso') {
+        try {
+            const { regenerateDailyAvailability } = await import('@/app/admin/settings/capacity-actions')
+            await regenerateDailyAvailability(new Date(date as string), new Date(date as string))
+        } catch (e) {
+            console.error('Failed to regenerate availability:', e)
+        }
+    }
+
     revalidatePath('/admin/calendar')
     revalidatePath('/user/calendar')
+    revalidatePath('/admin/dashboard')
 }

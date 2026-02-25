@@ -11,11 +11,14 @@ CREATE TABLE public.profiles (
   PRIMARY KEY (id)
 );
 
+-- Create custom types
+CREATE TYPE public.request_type AS ENUM ('PO', 'DA', 'AP', 'DO');
+
 -- Create requests table
 CREATE TABLE public.requests (
   id uuid DEFAULT gen_random_uuid() PRIMARY KEY,
   user_id uuid REFERENCES public.profiles(id) ON DELETE CASCADE NOT NULL,
-  type text NOT NULL CHECK (type IN ('PO', 'DA', 'AP')),
+  type public.request_type NOT NULL,
   start_date date NOT NULL,
   end_date date NOT NULL,
   status text DEFAULT 'pending' CHECK (status IN ('pending', 'approved', 'rejected')),

@@ -8,6 +8,7 @@ import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createRequest } from './actions'
 import { getDailyAvailability } from '@/app/admin/settings/capacity-actions'
+import { createClient as createBrowserSupabase } from '@/lib/supabase/client'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
 import { eachDayOfInterval, format, parseISO } from 'date-fns'
@@ -21,12 +22,22 @@ export default function NewRequestPage() {
     const [endDate, setEndDate] = useState('')
     const [availabilityCheck, setAvailabilityCheck] = useState<{ valid: boolean, message: string, details?: string } | null>(null)
 
+    // Admin state
+    const [isAdmin, setIsAdmin] = useState(false)
+    const [profiles, setProfiles] = useState<{ id: string, full_name: string | null, email: string | null }[]>([])
+    const [targetUserId, setTargetUserId] = useState<string>('')
+    const [autoApprove, setAutoApprove] = useState(false)
+
     useEffect(() => {
         async function check() {
             if (!startDate || !endDate) {
                 setAvailabilityCheck(null)
                 return
             }
+
+            const supabase = createBrowserSupabase()
+            const { data: { user } } = await supabase.auth.getUser()
+            const effectiveId = (isAdmin && targetUserId) ? targetUserId : user?.id
 
             const start = parseISO(startDate)
             const end = parseISO(endDate)
@@ -79,7 +90,21 @@ export default function NewRequestPage() {
         }
 
         check()
-    }, [startDate, endDate])
+
+        async function fetchInitialData() {
+            const supabase = createBrowserSupabase()
+            const { data: { user } } = await supabase.auth.getUser()
+            if (!user) return
+
+            const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+            if (profile?.role === 'admin') {
+                setIsAdmin(true)
+                const { data: allProfiles } = await supabase.from('profiles').select('id, full_name, email').order('full_name')
+                setProfiles(allProfiles || [])
+            }
+        }
+        fetchInitialData()
+    }, [startDate, endDate, isAdmin, targetUserId])
 
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
@@ -127,6 +152,7 @@ export default function NewRequestPage() {
                                     <SelectItem value="PO">Permiso Oficial (PO)</SelectItem>
                                     <SelectItem value="DA">Días Adicionales (DA)</SelectItem>
                                     <SelectItem value="AP">Asuntos Propios (AP)</SelectItem>
+                                    {isAdmin && <SelectItem value="DO">Descanso Obligatorio (DO)</SelectItem>}
                                 </SelectContent>
                             </Select>
                         </div>
@@ -153,6 +179,44 @@ export default function NewRequestPage() {
                                 />
                             </div>
                         </div>
+
+                        {isAdmin && (
+                            <>
+                                <div className="space-y-2">
+                                    <Label htmlFor="target_user_id">Solicitar en nombre de (Admin)</Label>
+                                    <Select
+                                        name="target_user_id"
+                                        value={targetUserId}
+                                        onValueChange={setTargetUserId}
+                                    >
+                                        <SelectTrigger>
+                                            <SelectValue placeholder="Selecciona un usuario (opcional)" />
+                                        </SelectTrigger>
+                                        <SelectContent>
+                                            <SelectItem value="none">Yo mismo</SelectItem>
+                                            {profiles.map(p => (
+                                                <SelectItem key={p.id} value={p.id}>
+                                                    {p.full_name || p.email}
+                                                </SelectItem>
+                                            ))}
+                                        </SelectContent>
+                                    </Select>
+                                    <input type="hidden" name="target_user_id" value={targetUserId === 'none' ? '' : targetUserId} />
+                                </div>
+
+                                <div className="flex items-center space-x-2 pt-2">
+                                    <input
+                                        type="checkbox"
+                                        id="auto_approve_check"
+                                        className="h-4 w-4 rounded border-gray-300"
+                                        checked={autoApprove}
+                                        onChange={(e) => setAutoApprove(e.target.checked)}
+                                    />
+                                    <Label htmlFor="auto_approve_check" className="text-sm font-medium">Aprobar automáticamente esta solicitud</Label>
+                                    <input type="hidden" name="auto_approve" value={autoApprove.toString()} />
+                                </div>
+                            </>
+                        )}
 
                         {availabilityCheck && (
                             <Alert variant={availabilityCheck.valid ? "default" : "destructive"} className={availabilityCheck.valid ? "border-green-500 bg-green-50 dark:bg-green-900/10" : ""}>

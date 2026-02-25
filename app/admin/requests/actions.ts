@@ -108,6 +108,17 @@ export async function updateRequest(requestId: string, data: { type: 'PO' | 'DA'
 
     if (error) throw new Error(`Error updating request: ${error.message}`)
 
+    // Regenerate availability
+    try {
+        const { data: req } = await adminSupabase.from('requests').select('start_date, end_date').eq('id', requestId).single()
+        if (req) {
+            const { regenerateDailyAvailability } = await import('@/app/admin/settings/capacity-actions')
+            await regenerateDailyAvailability(new Date(req.start_date), new Date(req.end_date))
+        }
+    } catch (e) {
+        console.error('Failed to regenerate availability after update:', e)
+    }
+
     revalidatePath('/admin/requests')
     revalidatePath('/admin/dashboard')
     revalidatePath('/admin/capacity')

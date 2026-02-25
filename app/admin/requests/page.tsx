@@ -8,6 +8,8 @@ import {
     TableRow,
 } from "@/components/ui/table"
 import { Badge } from "@/components/ui/badge"
+import { Button } from "@/components/ui/button"
+import { PlusIcon } from "lucide-react"
 import { RequestActions } from './request-actions'
 
 export default async function RequestsPage() {
@@ -28,9 +30,17 @@ export default async function RequestsPage() {
 
     return (
         <div className="space-y-6">
-            <div>
-                <h2 className="text-3xl font-bold tracking-tight">Solicitudes Pendientes</h2>
-                <p className="text-muted-foreground">Gestiona las solicitudes de ausencia.</p>
+            <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <div>
+                    <h2 className="text-3xl font-bold tracking-tight">Solicitudes Pendientes</h2>
+                    <p className="text-muted-foreground">Gestiona las solicitudes de ausencia.</p>
+                </div>
+                <Button asChild>
+                    <a href="/user/requests/new">
+                        <PlusIcon className="mr-2 h-4 w-4" />
+                        Crear Solicitud
+                    </a>
+                </Button>
             </div>
 
             <div className="border rounded-lg bg-card shadow-sm">

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, useCallback } from 'react'
 import { Calendar } from "@/components/ui/calendar"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -34,69 +34,84 @@ export default function CalendarView() {
     const [dayDetails, setDayDetails] = useState<unknown>(null)
     const [isDetailsLoading, setIsDetailsLoading] = useState(false)
 
-    useEffect(() => {
-        const fetchEvents = async () => {
-            const supabase = createClient()
+    const fetchEvents = useCallback(async () => {
+        const supabase = createClient()
 
-            // Fetch session/user
-            const { data: { user } } = await supabase.auth.getUser()
-            if (user) {
-                const { data: p } = await supabase.from('profiles').select('id, role').eq('id', user.id).single()
-                setCurrentUser(p)
-            }
-
-            // Fetch requests (absences)
-            const { data: requests } = await supabase
-                .from('requests')
-                .select(`*, profiles(full_name)`)
-                .neq('status', 'rejected')
-
-            // Fetch special events (guards, etc)
-            const { data: specialEvents } = await supabase
-                .from('special_events')
-                .select(`*, profiles(full_name)`)
-
-            const allEvents: CalendarEvent[] = []
-
-            // Process Requests (Date ranges expanded)
-            {/* @ts-expect-error - mapping from DB profile */ }
-            requests?.forEach((req) => {
-                const current = new Date(req.start_date)
-                const end = new Date(req.end_date)
-
-                while (current <= end) {
-                    allEvents.push({
-                        id: req.id,
-                        date: new Date(current),
-                        type: req.type as any,
-                        status: req.status as any,
-                        userId: req.user_id,
-                        // @ts-expect-error - mapping from DB profile
-                        userName: req.profiles?.full_name || 'Desconocido',
-                    })
-                    current.setDate(current.getDate() + 1)
-                }
-            })
-
-            // Process Special Events
-            specialEvents?.forEach(evt => {
-                allEvents.push({
-                    id: evt.id,
-                    date: new Date(evt.date),
-                    type: evt.type as any,
-                    userId: evt.user_id,
-                    // @ts-ignore
-                    userName: evt.profiles?.full_name || 'Desconocido',
-                    description: evt.description
-                })
-            })
-
-            setEvents(allEvents)
-            setLoading(false)
+        // Fetch session/user
+        const { data: { user } } = await supabase.auth.getUser()
+        if (user) {
+            const { data: p } = await supabase.from('profiles').select('id, role').eq('id', user.id).single()
+            setCurrentUser(p)
         }
 
-        fetchEvents()
+        // Fetch requests (absences)
+        const { data: requests } = await supabase
+            .from('requests')
+            .select(`*, profiles(full_name)`)
+            .neq('status', 'rejected')
+
+        // Fetch special events (guards, etc)
+        const { data: specialEvents } = await supabase
+            .from('special_events')
+            .select(`*, profiles(full_name)`)
+
+        const allEvents: CalendarEvent[] = []
+
+        // Process Requests (Date ranges expanded)
+        // @ts-expect-error - mapping from DB profile
+        requests?.forEach((req) => {
+            const current = new Date(req.start_date)
+            const end = new Date(req.end_date)
+
+            while (current <= end) {
+                allEvents.push({
+                    id: req.id,
+                    date: new Date(current),
+                    type: req.type as any,
+                    status: req.status as any,
+                    userId: req.user_id,
+                    // @ts-expect-error - mapping from DB profile
+                    userName: req.profiles?.full_name || 'Desconocido',
+                })
+                current.setDate(current.getDate() + 1)
+            }
+        })
+
+        // Process Special Events
+        specialEvents?.forEach(evt => {
+            allEvents.push({
+                id: evt.id,
+                date: new Date(evt.date),
+                type: evt.type as any,
+                userId: evt.user_id,
+                // @ts-expect-error - mapping from DB profile
+                userName: evt.profiles?.full_name || 'Desconocido',
+                description: evt.description
+            })
+        })
+
+        setEvents(allEvents)
+        setLoading(false)
     }, [])
+
+    useEffect(() => {
+        fetchEvents()
+
+        const supabase = createClient()
+        const channel = supabase
+            .channel('calendar_sync')
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'requests' }, () => {
+                fetchEvents()
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'special_events' }, () => {
+                fetchEvents()
+            })
+            .subscribe()
+
+        return () => {
+            supabase.removeChannel(channel)
+        }
+    }, [fetchEvents])
 
     const handleDayClick = async (day: Date) => {
         setSelectedDate(day)
@@ -188,14 +203,18 @@ export default function CalendarView() {
                                                 <div
                                                     key={`${evt.id}-${idx}`}
                                                     className={`text-[8px] sm:text-[10px] p-0.5 sm:p-1 rounded truncate font-medium border leading-tight
-                                                        ${evt.status === 'pending' ? 'opacity-70 border-dashed' : ''}
-                                                        ${evt.type === 'PO' ? 'bg-blue-100/50 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-100 dark:border-blue-800' : ''}
-                                                        ${evt.type === 'DA' ? 'bg-purple-100/50 text-purple-700 border-purple-200 dark:bg-purple-900/50 dark:text-purple-100 dark:border-purple-800' : ''}
-                                                        ${evt.type === 'AP' ? 'bg-indigo-100/50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-100 dark:border-indigo-800' : ''}
-                                                        ${['guardia', 'curso'].includes(evt.type) ? 'bg-orange-100/50 text-orange-700 border-orange-200 dark:bg-orange-900/50 dark:text-orange-100 dark:border-orange-800' : ''}
-                                                    `}
+                                                            ${evt.status === 'pending' ? 'opacity-70 border-dashed bg-muted/30' : 'shadow-sm'}
+                                                            ${evt.type === 'PO' ? 'bg-blue-100/50 text-blue-700 border-blue-200 dark:bg-blue-900/50 dark:text-blue-100 dark:border-blue-800' : ''}
+                                                            ${evt.type === 'DA' ? 'bg-purple-100/50 text-purple-700 border-purple-200 dark:bg-purple-900/50 dark:text-purple-100 dark:border-purple-800' : ''}
+                                                            ${evt.type === 'AP' ? 'bg-indigo-100/50 text-indigo-700 border-indigo-200 dark:bg-indigo-900/50 dark:text-indigo-100 dark:border-indigo-800' : ''}
+                                                            ${evt.type === 'curso' ? 'bg-emerald-100/50 text-emerald-700 border-emerald-200 dark:bg-emerald-900/50 dark:text-emerald-100 dark:border-emerald-800' : ''}
+                                                            ${evt.type === 'guardia' ? 'bg-orange-100/50 text-orange-700 border-orange-200 dark:bg-orange-900/50 dark:text-orange-100 dark:border-orange-800' : ''}
+                                                        `}
                                                     title={`${evt.userName} - ${evt.type} ${evt.status ? `(${evt.status})` : ''}`}
                                                 >
+                                                    <span className="hidden sm:inline font-bold">
+                                                        {evt.status === 'pending' ? '[SOLICITUD] ' : (['PO', 'DA', 'AP', 'curso'].includes(evt.type) ? '[AUSENCIA] ' : '')}
+                                                    </span>
                                                     <span className="hidden sm:inline">{evt.userName.split(' ')[0]} - </span> {evt.type}
                                                 </div>
                                             ))}

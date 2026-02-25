@@ -63,8 +63,10 @@ export async function updateSession(request: NextRequest) {
             }
 
             // Redirect admin trying to access user (Strict separation)
-            // Note: If you want admins to see user views, remove this block or modify it.
-            if (request.nextUrl.pathname.startsWith('/user') && profile?.role === 'admin') {
+            // Exception: Allow admin to access /user/requests/new to create for others
+            if (request.nextUrl.pathname.startsWith('/user') &&
+                !request.nextUrl.pathname.includes('/user/requests/new') &&
+                profile?.role === 'admin') {
                 return NextResponse.redirect(new URL('/admin/dashboard', request.url))
             }
         }
