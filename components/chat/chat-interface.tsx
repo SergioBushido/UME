@@ -54,21 +54,25 @@ export function ChatInterface({ currentProfile, allProfiles }: ChatInterfaceProp
             .or(`and(sender_id.eq.${currentProfile.id},receiver_id.eq.${contactId}),and(sender_id.eq.${contactId},receiver_id.eq.${currentProfile.id})`)
             .order('created_at', { ascending: true })
 
-        if (!error) {
-            setMessages(data || [])
+        if (!error && data) {
+            setMessages(data)
             // Mark as read when opening conversation
-            markAsRead(contactId)
+            await markAsRead(contactId)
         }
         setLoading(false)
     }, [currentProfile.id, supabase])
 
     useEffect(() => {
         if (selectedContact) {
+            // Avoid calling setState in the same render cycle if possible, 
+            // though here it's inside an effect which is generally okay 
+            // but the lint is complaining about fetchMessages internal setStatus.
+            // We can wrap it in a microtask or just ignore if it's not actually loops.
             fetchMessages(selectedContact.id)
         } else {
             setMessages([])
         }
-    }, [selectedContact, fetchMessages])
+    }, [selectedContact?.id, fetchMessages])
 
     // Real-time subscription
     useEffect(() => {
@@ -86,7 +90,7 @@ export function ChatInterface({ currentProfile, allProfiles }: ChatInterfaceProp
                     const newMsg = payload.new as Message
                     if (selectedContact && newMsg.sender_id === selectedContact.id) {
                         setMessages(prev => [...prev, newMsg])
-                        markAsRead(selectedContact.id)
+                        markAsRead(selectedContact.id).catch(console.error)
                     }
                 }
             )

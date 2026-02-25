@@ -50,6 +50,9 @@ export function StickyChatIcon() {
         }
         fetchUser()
 
+        // Use a stable reference to userId for the subscription
+        const currentUserId = userId
+
         // Real-time subscription for new messages and status changes
         const channel = supabase
             .channel('unread_messages_sync')
@@ -61,12 +64,12 @@ export function StickyChatIcon() {
                     table: 'messages'
                 },
                 (payload) => {
-                    // Re-fetch if the message involves the current user
-                    if (userId) {
-                        const msg = payload.new as any || payload.old as any
-                        if (msg.receiver_id === userId || msg.sender_id === userId) {
-                            fetchUnreadData(userId)
-                        }
+                    const msg = payload.new as any || payload.old as any
+                    // Re-fetch if:
+                    // 1. The message clearly belongs to the current user
+                    // 2. OR it's an UPDATE (which might have partial data)
+                    if (currentUserId && (msg?.receiver_id === currentUserId || payload.eventType === 'UPDATE')) {
+                        fetchUnreadData(currentUserId)
                     }
                 }
             )

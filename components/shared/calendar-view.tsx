@@ -26,16 +26,24 @@ export default function CalendarView() {
     const [date, setDate] = useState<Date | undefined>(new Date())
     const [events, setEvents] = useState<CalendarEvent[]>([])
     const [loading, setLoading] = useState(true)
+    const [currentUser, setCurrentUser] = useState<{ id: string, role: string } | null>(null)
 
     // Dialog State
     const [selectedDate, setSelectedDate] = useState<Date | null>(null)
     const [isDialogOpen, setIsDialogOpen] = useState(false)
-    const [dayDetails, setDayDetails] = useState<any>(null)
+    const [dayDetails, setDayDetails] = useState<unknown>(null)
     const [isDetailsLoading, setIsDetailsLoading] = useState(false)
 
     useEffect(() => {
         const fetchEvents = async () => {
             const supabase = createClient()
+
+            // Fetch session/user
+            const { data: { user } } = await supabase.auth.getUser()
+            if (user) {
+                const { data: p } = await supabase.from('profiles').select('id, role').eq('id', user.id).single()
+                setCurrentUser(p)
+            }
 
             // Fetch requests (absences)
             const { data: requests } = await supabase
@@ -51,7 +59,8 @@ export default function CalendarView() {
             const allEvents: CalendarEvent[] = []
 
             // Process Requests (Date ranges expanded)
-            requests?.forEach((req: any) => {
+            {/* @ts-expect-error - mapping from DB profile */ }
+            requests?.forEach((req) => {
                 const current = new Date(req.start_date)
                 const end = new Date(req.end_date)
 
@@ -62,7 +71,7 @@ export default function CalendarView() {
                         type: req.type as any,
                         status: req.status as any,
                         userId: req.user_id,
-                        // @ts-ignore
+                        // @ts-expect-error - mapping from DB profile
                         userName: req.profiles?.full_name || 'Desconocido',
                     })
                     current.setDate(current.getDate() + 1)
@@ -204,6 +213,7 @@ export default function CalendarView() {
                     data={dayDetails}
                     isLoading={isDetailsLoading}
                     onUpdate={updateDayDetails}
+                    currentUser={currentUser}
                 />
             </CardContent>
         </Card>

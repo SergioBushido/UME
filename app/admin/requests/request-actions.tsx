@@ -3,7 +3,7 @@
 import { useState } from 'react'
 import { Button } from "@/components/ui/button"
 import { toast } from "sonner"
-import { Check, X } from "lucide-react"
+import { Check, X, Trash2 } from "lucide-react"
 import {
     Dialog,
     DialogContent,
@@ -14,8 +14,9 @@ import {
 } from "@/components/ui/dialog"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
-import { updateRequestStatus } from './actions'
+import { updateRequestStatus, updateRequest, deleteRequest } from './actions'
 import { EditRequestDialog } from './edit-request-dialog'
+import { useRouter } from 'next/navigation'
 
 interface Request {
     id: string
@@ -28,6 +29,7 @@ interface Request {
 export function RequestActions({ request }: { request: Request }) {
     const [rejectOpen, setRejectOpen] = useState(false)
     const [loading, setLoading] = useState(false)
+    const router = useRouter()
 
     const handleApprove = async () => {
         if (!confirm('¿Aprobar solicitud?')) return
@@ -35,7 +37,8 @@ export function RequestActions({ request }: { request: Request }) {
         try {
             await updateRequestStatus(request.id, 'approved')
             toast.success("Solicitud aprobada correctamente")
-        } catch (error) {
+            router.refresh()
+        } catch (_error) {
             toast.error("Error al aprobar solicitud")
         } finally {
             setLoading(false)
@@ -52,8 +55,23 @@ export function RequestActions({ request }: { request: Request }) {
             await updateRequestStatus(request.id, 'rejected', reason)
             setRejectOpen(false)
             toast.success("Solicitud rechazada correctamente")
-        } catch (error) {
+            router.refresh()
+        } catch (_error) {
             toast.error("Error al rechazar solicitud")
+        } finally {
+            setLoading(false)
+        }
+    }
+
+    const handleDelete = async () => {
+        if (!confirm('¿Estás seguro de que quieres ELIMINAR definitivamente esta solicitud? No se podrá deshacer.')) return
+        setLoading(true)
+        try {
+            await deleteRequest(request.id)
+            toast.success("Solicitud eliminada correctamente")
+            router.refresh()
+        } catch (_error) {
+            toast.error("Error al eliminar solicitud")
         } finally {
             setLoading(false)
         }
@@ -78,8 +96,20 @@ export function RequestActions({ request }: { request: Request }) {
                 variant="destructive"
                 onClick={() => setRejectOpen(true)}
                 disabled={loading}
+                title="Rechazar"
             >
                 <X className="h-4 w-4" />
+            </Button>
+
+            <Button
+                size="sm"
+                variant="outline"
+                className="text-destructive hover:bg-destructive/10"
+                onClick={handleDelete}
+                disabled={loading}
+                title="Eliminar definitivamente"
+            >
+                <Trash2 className="h-4 w-4" />
             </Button>
 
             <Dialog open={rejectOpen} onOpenChange={setRejectOpen}>

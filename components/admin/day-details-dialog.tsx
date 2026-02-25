@@ -20,9 +20,10 @@ interface DayDetailsProps {
     data: any // The result from getDayDetails
     isLoading: boolean
     onUpdate: () => void
+    currentUser: { id: string, role: string } | null
 }
 
-export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpdate }: DayDetailsProps) {
+export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpdate, currentUser }: DayDetailsProps) {
 
     const [isPending, startTransition] = useTransition()
     const [isAdding, setIsAdding] = useState(false)
@@ -90,12 +91,22 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
                 const actions = await import('@/app/admin/capacity/manual-absence-action')
 
                 if (editingId) {
-                    await actions.updateAbsence(editingId, {
-                        userId: selectedUser,
-                        type: selectedType as any,
-                        startDate,
-                        endDate
-                    })
+                    if (currentUser?.role === 'admin') {
+                        await actions.updateAbsence(editingId, {
+                            userId: selectedUser,
+                            type: selectedType as any,
+                            startDate,
+                            endDate
+                        })
+                    } else {
+                        // Regular user editing their own request
+                        const userActions = await import('@/app/user/requests/actions')
+                        await userActions.updateUserRequest(editingId, {
+                            type: selectedType as any,
+                            startDate,
+                            endDate
+                        })
+                    }
                 } else {
                     await actions.createAndApproveAbsence(selectedUser, selectedType as any, startDate, endDate)
                 }
@@ -195,7 +206,7 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
                                         className="w-full text-sm border rounded-lg p-2.5 bg-background focus:ring-2 focus:ring-primary/20 outline-none transition-all"
                                         value={selectedUser}
                                         onChange={e => setSelectedUser(e.target.value)}
-                                        disabled={!!editingId}
+                                        disabled={!!editingId || currentUser?.role !== 'admin'}
                                     >
                                         <option value="">Seleccionar empleado...</option>
                                         {users.map(u => (
@@ -247,12 +258,14 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
                                 </div>
                             </div>
                         ) : (
-                            <Button className="w-full rounded-xl border-dashed py-6 group hover:border-primary transition-all" variant="outline" onClick={handleStartAdd}>
-                                <div className="flex items-center gap-2 group-hover:scale-105 transition-transform">
-                                    <span className="text-lg">+</span>
-                                    <span className="font-bold">Registrar Ausencia Manual</span>
-                                </div>
-                            </Button>
+                            currentUser?.role === 'admin' && (
+                                <Button className="w-full rounded-xl border-dashed py-6 group hover:border-primary transition-all" variant="outline" onClick={handleStartAdd}>
+                                    <div className="flex items-center gap-2 group-hover:scale-105 transition-transform">
+                                        <span className="text-lg">+</span>
+                                        <span className="font-bold">Registrar Ausencia Manual</span>
+                                    </div>
+                                </Button>
+                            )
                         )}
 
                         {/* Absent List */}
@@ -287,14 +300,16 @@ export function DayDetailsDialog({ date, isOpen, onClose, data, isLoading, onUpd
                                                         {format(new Date(req.start_date), 'd MMM')} - {format(new Date(req.end_date), 'd MMM')}
                                                     </p>
                                                 </div>
-                                                <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 rounded-full" onClick={() => handleStartEdit(req)} disabled={isPending}>
-                                                        <Pencil className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                    <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 rounded-full" onClick={() => handleRevoke(req.id)} disabled={isPending}>
-                                                        <Trash2 className="h-3.5 w-3.5" />
-                                                    </Button>
-                                                </div>
+                                                {(currentUser?.role === 'admin' || currentUser?.id === req.user_id) && (
+                                                    <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-blue-600 rounded-full" onClick={() => handleStartEdit(req)} disabled={isPending}>
+                                                            <Pencil className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                        <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 rounded-full" onClick={() => handleRevoke(req.id)} disabled={isPending}>
+                                                            <Trash2 className="h-3.5 w-3.5" />
+                                                        </Button>
+                                                    </div>
+                                                )}
                                             </div>
                                         ))}
                                     </div>

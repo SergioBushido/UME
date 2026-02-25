@@ -54,6 +54,11 @@ export async function createManualAbsence(formData: FormData) {
 export async function createAndApproveAbsence(userId: string, type: 'PO' | 'DA' | 'AP', startDate: string, endDate: string) {
     const supabase = await createClient()
 
+    // Verify Admin Role
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user?.id).single()
+    if (profile?.role !== 'admin') throw new Error('Solo los administradores pueden registrar ausencias manuales con aprobación automática.')
+
     // Prevent overlapping requests for this user
     const { data: overlapping } = await supabase
         .from('requests')
@@ -106,6 +111,11 @@ export async function getUsers() {
 
 export async function updateAbsence(requestId: string, data: { userId: string, type: 'PO' | 'DA' | 'AP', startDate: string, endDate: string }) {
     const supabase = await createClient()
+
+    // Verify Admin Role
+    const { data: { user } } = await supabase.auth.getUser()
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user?.id).single()
+    if (profile?.role !== 'admin') throw new Error('Solo los administradores pueden editar ausencias de otros usuarios.')
 
     // 1. Get OLD request details to know what range to regenerate
     const { data: oldReq } = await supabase.from('requests').select('start_date, end_date, status').eq('id', requestId).single()

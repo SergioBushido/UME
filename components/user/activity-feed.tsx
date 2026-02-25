@@ -86,7 +86,7 @@ export function ActivityFeed({ activities }: ActivityFeedProps) {
 
                         {activity.content && (
                             <p className="text-sm mt-2 text-foreground/80 line-clamp-2 italic bg-muted/20 p-2 rounded-md">
-                                "{activity.content}"
+                                &quot;{activity.content}&quot;
                             </p>
                         )}
 

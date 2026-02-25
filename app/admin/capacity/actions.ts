@@ -63,12 +63,12 @@ export async function revokeRequest(requestId: string, path: string) {
     const supabase = await createClient()
     const supabaseAdmin = await createAdminClient()
 
-    // Check if user is admin
+    // 0. Verify auth and role
     const { data: { user } } = await supabase.auth.getUser()
-    if (!user) {
-        console.error('[REVOKE] No user found in session')
-        throw new Error('Unauthorized')
-    }
+    if (!user) throw new Error('No autenticado')
+
+    const { data: profile } = await supabase.from('profiles').select('role').eq('id', user.id).single()
+    const isAdmin = profile?.role === 'admin'
 
     // 1. Get request details
     const { data: req, error: fetchError } = await supabaseAdmin
@@ -80,6 +80,11 @@ export async function revokeRequest(requestId: string, path: string) {
     if (fetchError || !req) {
         console.error(`[REVOKE] Request not found: ${requestId}`, fetchError)
         throw new Error('Request not found')
+    }
+
+    // Allow if admin OR if owner
+    if (!isAdmin && req.user_id !== user.id) {
+        throw new Error('No autorizado para eliminar esta solicitud')
     }
 
     console.log(`[REVOKE] Found request for ${req.profiles?.full_name}: ${req.type} (${req.status})`)
@@ -118,5 +123,6 @@ export async function revokeRequest(requestId: string, path: string) {
 
     revalidatePath('/admin/dashboard')
     revalidatePath('/admin/capacity')
+    revalidatePath('/admin/requests')
     console.log(`[REVOKE] Revocation complete.`)
 }
