@@ -57,10 +57,19 @@ export async function updateSettings(formData: FormData) {
         const { regenerateDailyAvailability } = await import('./capacity-actions')
         const now = new Date()
         const start = new Date(now.getFullYear(), 0, 1) // Start of current year
-        const end = new Date(now.getFullYear() + 1, 11, 31) // End of next year
+        const end = new Date(now.getFullYear() + 2, 11, 31) // Extend to 3 years to be safe
+        console.log(`Triggering regeneration for blocked_weeks from ${start.toISOString()} to ${end.toISOString()}`)
         await regenerateDailyAvailability(start, end)
     }
 
+    console.log(`Revalidating paths after settings update for key: ${key}`)
     revalidatePath('/admin/settings')
+    revalidatePath('/admin/dashboard')
+    revalidatePath('/admin/calendar')
+    revalidatePath('/user/dashboard')
+    revalidatePath('/user/calendar')
+    revalidatePath('/user/requests/new')
+    revalidatePath('/', 'layout')
+
     return { success: true }
 }

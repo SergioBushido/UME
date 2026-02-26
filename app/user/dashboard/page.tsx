@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+export const dynamic = 'force-dynamic'
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { CalendarCheck, Shield, User, Clock, Calendar } from "lucide-react"
 import { DashboardCalendarWrapper } from '@/components/shared/dashboard-calendar-wrapper'

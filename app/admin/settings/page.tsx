@@ -11,6 +11,9 @@ import { StaffTab } from './staff-tab'
 import { RulesTab } from './rules-tab'
 import { BlockedWeeksManager } from '@/components/admin/blocked-weeks-manager'
 import SettingsForm from './settings-form'
+
+export const dynamic = 'force-dynamic'
+
 export default async function SettingsPage() {
     // Use admin client to read system_settings (bypass RLS)
     const supabase = createAdminClient()
