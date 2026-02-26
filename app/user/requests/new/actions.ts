@@ -3,7 +3,6 @@
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 
 export async function createRequest(formData: FormData) {
     const supabase = await createClient()
@@ -92,7 +91,7 @@ export async function createRequest(formData: FormData) {
         .from('requests')
         .select('id, type, start_date, end_date, status')
         .eq('user_id', effectiveUserId)
-        .neq('status', 'cancelled')
+        .in('status', ['pending', 'approved'])
         .lte('start_date', end_date)
         .gte('end_date', start_date)
 
@@ -121,10 +120,14 @@ export async function createRequest(formData: FormData) {
 
     // Auto-approve if requested by admin
     if (isAdmin && auto_approve && insertedRequest) {
-        const { error: approvalError } = await supabase.rpc('approve_request_with_capacity', { request_id: insertedRequest.id })
-        if (approvalError) {
-            console.error('Failed to auto-approve admin request:', approvalError)
-            // We don't throw here to avoid user confusion, but could be logged or returned in state
+        try {
+            const approvalClient = isAdmin ? createAdminClient() : supabase
+            const { error: approvalError } = await approvalClient.rpc('approve_request_with_capacity', { request_id: insertedRequest.id })
+            if (approvalError) {
+                console.error('Failed to auto-approve admin request:', approvalError)
+            }
+        } catch (e) {
+            console.error('Failed to auto-approve admin request (exception):', e)
         }
 
         // Regenerate availability
@@ -141,9 +144,6 @@ export async function createRequest(formData: FormData) {
     revalidatePath('/admin/dashboard')
     revalidatePath('/admin/requests')
 
-    if (isAdmin) {
-        redirect('/admin/requests')
-    } else {
-        redirect('/user/dashboard')
-    }
+    // Return redirect target to caller (client) to avoid throwing NEXT_REDIRECT
+    return { redirectTo: isAdmin ? '/admin/requests' : '/user/dashboard' }
 }

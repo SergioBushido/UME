@@ -25,6 +25,7 @@ interface CalendarEvent {
 export default function CalendarView() {
     const [date, setDate] = useState<Date | undefined>(new Date())
     const [events, setEvents] = useState<CalendarEvent[]>([])
+    const [lockedDays, setLockedDays] = useState<string[]>([])
     const [loading, setLoading] = useState(true)
     const [currentUser, setCurrentUser] = useState<{ id: string, role: string } | null>(null)
 
@@ -55,10 +56,15 @@ export default function CalendarView() {
             .from('special_events')
             .select(`*, profiles(full_name)`)
 
+        // Fetch blocked days (daily_availability)
+        const { data: availability } = await supabase
+            .from('daily_availability')
+            .select('date, is_locked')
+            .eq('is_locked', true)
+
         const allEvents: CalendarEvent[] = []
 
         // Process Requests (Date ranges expanded)
-        // @ts-expect-error - mapping from DB profile
         requests?.forEach((req) => {
             const current = new Date(req.start_date)
             const end = new Date(req.end_date)
@@ -70,8 +76,7 @@ export default function CalendarView() {
                     type: req.type as any,
                     status: req.status as any,
                     userId: req.user_id,
-                    // @ts-expect-error - mapping from DB profile
-                    userName: req.profiles?.full_name || 'Desconocido',
+                    userName: (req.profiles as any)?.full_name || 'Desconocido',
                 })
                 current.setDate(current.getDate() + 1)
             }
@@ -84,13 +89,13 @@ export default function CalendarView() {
                 date: new Date(evt.date),
                 type: evt.type as any,
                 userId: evt.user_id,
-                // @ts-expect-error - mapping from DB profile
-                userName: evt.profiles?.full_name || 'Desconocido',
+                userName: (evt.profiles as any)?.full_name || 'Desconocido',
                 description: evt.description
             })
         })
 
         setEvents(allEvents)
+        setLockedDays(availability?.map(a => a.date) || [])
         setLoading(false)
     }, [])
 
@@ -104,6 +109,9 @@ export default function CalendarView() {
                 fetchEvents()
             })
             .on('postgres_changes', { event: '*', schema: 'public', table: 'special_events' }, () => {
+                fetchEvents()
+            })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_availability' }, () => {
                 fetchEvents()
             })
             .subscribe()
@@ -195,9 +203,17 @@ export default function CalendarView() {
                                     <div
                                         key={d}
                                         onClick={() => handleDayClick(dayDate)}
-                                        className="h-20 sm:h-32 border border-border rounded-md p-1 overflow-y-auto bg-card hover:bg-accent/50 cursor-pointer transition-all relative flex flex-col group"
+                                        className={cn(
+                                            "h-20 sm:h-32 border border-border rounded-md p-1 overflow-y-auto bg-card hover:bg-accent/50 cursor-pointer transition-all relative flex flex-col group",
+                                            lockedDays.includes(formatBtn(dayDate, 'yyyy-MM-dd')) && "bg-muted/50 grayscale-[0.5]"
+                                        )}
                                     >
-                                        <span className="font-bold text-[10px] sm:text-sm text-muted-foreground block mb-1 sticky top-0 bg-card/80 backdrop-blur-sm z-10 group-hover:text-primary transition-colors">{d}</span>
+                                        <div className="flex justify-between items-center mb-1 sticky top-0 bg-transparent z-10 group-hover:text-primary transition-colors">
+                                            <span className="font-bold text-[10px] sm:text-sm text-muted-foreground">{d}</span>
+                                            {lockedDays.includes(formatBtn(dayDate, 'yyyy-MM-dd')) && (
+                                                <Badge variant="outline" className="text-[8px] px-1 h-4 bg-gray-500 text-white border-none font-bold">BLOQUEADO</Badge>
+                                            )}
+                                        </div>
                                         <div className="space-y-0.5 sm:space-y-1 flex-1">
                                             {dayEvents.map((evt, idx) => (
                                                 <div

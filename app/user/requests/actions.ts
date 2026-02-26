@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function cancelRequest(requestId: string) {
@@ -22,7 +23,8 @@ export async function cancelRequest(requestId: string) {
 
     // Revert capacity if approved
     if (request.status === 'approved') {
-        const { error } = await supabase.rpc('revert_capacity_for_request', { request_id: requestId })
+        const adminSupabase = createAdminClient()
+        const { error } = await adminSupabase.rpc('revert_capacity_for_request', { request_id: requestId })
         if (error) throw new Error(error.message)
     }
 
@@ -61,7 +63,8 @@ export async function updateUserRequest(requestId: string, data: { type: 'PO' | 
 
     // 3. If it was approved, we MUST revert capacity/balance first because it's going back to pending
     if (request.status === 'approved') {
-        const { error: revertError } = await supabase.rpc('revert_capacity_for_request', { request_id: requestId })
+        const adminSupabase = createAdminClient()
+        const { error: revertError } = await adminSupabase.rpc('revert_capacity_for_request', { request_id: requestId })
         if (revertError) throw new Error('Error al revertir capacidad: ' + revertError.message)
     }
 

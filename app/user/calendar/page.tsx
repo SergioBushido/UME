@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { AvailabilityCalendar } from '@/components/shared/availability-calendar'
 import { addMonths, endOfMonth, format, startOfMonth, subMonths } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { Button } from "@/components/ui/button"
 import Link from 'next/link'
 import { ChevronLeft, ChevronRight } from "lucide-react"
@@ -53,7 +54,7 @@ export default async function UserCalendarPage({
                         </Link>
                     </Button>
                     <div className="font-medium min-w-[150px] text-center">
-                        {format(monthDate, 'MMMM yyyy')}
+                        {format(monthDate, 'MMMM yyyy', { locale: es })}
                     </div>
                     <Button variant="outline" size="icon" asChild>
                         <Link href={`/user/calendar?month=${nextMonth}`}>

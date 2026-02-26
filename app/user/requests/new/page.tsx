@@ -7,10 +7,12 @@ import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { createRequest } from './actions'
+import { useRouter } from 'next/navigation'
 import { getDailyAvailability } from '@/app/admin/settings/capacity-actions'
 import { createClient as createBrowserSupabase } from '@/lib/supabase/client'
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
 import { AlertCircle, CheckCircle2 } from "lucide-react"
+import { toast } from 'sonner'
 import { eachDayOfInterval, format, parseISO } from 'date-fns'
 
 export default function NewRequestPage() {
@@ -27,6 +29,7 @@ export default function NewRequestPage() {
     const [profiles, setProfiles] = useState<{ id: string, full_name: string | null, email: string | null }[]>([])
     const [targetUserId, setTargetUserId] = useState<string>('')
     const [autoApprove, setAutoApprove] = useState(false)
+    const router = useRouter()
 
     useEffect(() => {
         async function check() {
@@ -109,7 +112,7 @@ export default function NewRequestPage() {
     const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         e.preventDefault()
         if (availabilityCheck && !availabilityCheck.valid) {
-            setError('No puedes enviar la solicitud porque no hay disponibilidad en las fechas seleccionadas.')
+            toast.error('No puedes enviar la solicitud porque no hay disponibilidad en las fechas seleccionadas.')
             return
         }
 
@@ -118,9 +121,15 @@ export default function NewRequestPage() {
 
         const formData = new FormData(e.currentTarget)
         try {
-            await createRequest(formData)
+            const result: any = await createRequest(formData)
+            toast.success('Solicitud creada correctamente')
+            if (result?.redirectTo) {
+                router.push(result.redirectTo)
+                return
+            }
         } catch (err) {
-            setError(err instanceof Error ? err.message : 'Error al crear la solicitud')
+            const msg = err instanceof Error ? err.message : 'Error al crear la solicitud'
+            toast.error(msg)
             setLoading(false)
         }
     }
@@ -134,13 +143,7 @@ export default function NewRequestPage() {
                 </CardHeader>
                 <form onSubmit={handleSubmit}>
                     <CardContent className="space-y-4">
-                        {error && (
-                            <Alert variant="destructive">
-                                <AlertCircle className="h-4 w-4" />
-                                <AlertTitle>Error</AlertTitle>
-                                <AlertDescription>{error}</AlertDescription>
-                            </Alert>
-                        )}
+                        {/* Errors shown as elevated toasts instead of inline browser alerts */}
 
                         <div className="space-y-2">
                             <Label htmlFor="type">Tipo de Solicitud</Label>

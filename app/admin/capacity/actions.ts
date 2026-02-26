@@ -27,7 +27,7 @@ export async function getDayDetails(date: string) {
         `)
         .lte('start_date', date)
         .gte('end_date', date)
-        .neq('status', 'cancelled') // Hide cancelled requests
+        .in('status', ['pending', 'approved']) // Only consider pending/approved as blocking
         .order('created_at', { ascending: false }) // Order by newest
 
     logger.debug(`getDayDetails for ${date}: Found ${requests?.length ?? 0} requests (excluding cancelled).`)

@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from 'react'
+import React, { useState, useEffect } from 'react'
 import { Plus, Trash2, Calendar as CalendarIcon } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -8,6 +8,7 @@ import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
 
 interface DateRange {
+    id?: string
     start: string
     end: string
 }
@@ -17,10 +18,26 @@ interface BlockedWeeksManagerProps {
 }
 
 export function BlockedWeeksManager({ initialRanges }: BlockedWeeksManagerProps) {
-    const [ranges, setRanges] = useState<DateRange[]>(initialRanges)
+    // Ensure every range has a stable id for keys
+    const normalize = (arr: DateRange[] | undefined) => (arr || []).map(r => ({
+        id: r.id ?? `${r.start || 'x'}_${r.end || 'x'}`,
+        start: r.start || '',
+        end: r.end || ''
+    }))
+
+    const [ranges, setRanges] = useState<DateRange[]>(normalize(initialRanges))
+
+    // Keep local state in sync when server passes updated initialRanges
+    useEffect(() => {
+        setRanges(normalize(initialRanges))
+    }, [initialRanges])
 
     const addRange = () => {
-        setRanges([...ranges, { start: '', end: '' }])
+        const newId = typeof crypto !== 'undefined' && (crypto as any).randomUUID
+            ? (crypto as any).randomUUID()
+            : `${Date.now()}_${Math.floor(Math.random() * 100000)}`
+
+        setRanges([...ranges, { id: newId, start: '', end: '' }])
     }
 
     const removeRange = (index: number) => {
@@ -35,11 +52,12 @@ export function BlockedWeeksManager({ initialRanges }: BlockedWeeksManagerProps)
 
     return (
         <div className="space-y-4">
-            <input type="hidden" name="value" value={JSON.stringify(ranges)} />
+            {/* Submit only start/end pairs, omit internal ids */}
+            <input type="hidden" name="value" value={JSON.stringify(ranges.map(r => ({ start: r.start, end: r.end })))} />
 
             <div className="space-y-3">
                 {ranges.map((range, index) => (
-                    <Card key={index} className="bg-muted/30 border-dashed">
+                    <Card key={range.id ?? index} className="bg-muted/30 border-dashed">
                         <CardContent className="p-3">
                             <div className="flex flex-col sm:flex-row items-end gap-3">
                                 <div className="grid w-full gap-1.5">

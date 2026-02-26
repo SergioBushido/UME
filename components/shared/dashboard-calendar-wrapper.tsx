@@ -3,6 +3,7 @@
 import { useState, useCallback, useEffect } from 'react'
 import { AvailabilityCalendar, DailyAvailability } from '@/components/shared/availability-calendar'
 import { addMonths, format, subMonths } from 'date-fns'
+import { es } from 'date-fns/locale'
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight } from "lucide-react"
 import { getDailyAvailability } from '@/app/admin/settings/capacity-actions'
@@ -120,6 +121,10 @@ export function DashboardCalendarWrapper({
                 fetchAvailability(currentMonth)
                 if (selectedDate) updateDayDetails()
             })
+            .on('postgres_changes', { event: '*', schema: 'public', table: 'daily_availability' }, () => {
+                fetchAvailability(currentMonth)
+                if (selectedDate) updateDayDetails()
+            })
             .subscribe()
 
         return () => {
@@ -138,7 +143,7 @@ export function DashboardCalendarWrapper({
                     <ChevronLeft className="h-4 w-4" />
                 </Button>
                 <div className="font-medium min-w-[150px] text-center">
-                    {format(currentMonth, 'MMMM yyyy')}
+                    {format(currentMonth, 'MMMM yyyy', { locale: es })}
                 </div>
                 <Button variant="outline" size="icon" onClick={handleNextMonth} disabled={isLoading}>
                     <ChevronRight className="h-4 w-4" />

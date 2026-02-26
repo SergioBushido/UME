@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 import { logger } from '@/lib/logger'
 
@@ -26,7 +27,7 @@ export async function createManualAbsence(formData: FormData) {
         .from('requests')
         .select('id,type,start_date,end_date,status')
         .eq('user_id', userId)
-        .neq('status', 'cancelled')
+        .in('status', ['pending', 'approved'])
         .lte('start_date', end)
         .gte('end_date', start)
 
@@ -53,6 +54,7 @@ export async function createManualAbsence(formData: FormData) {
 
 export async function createAndApproveAbsence(userId: string, type: 'PO' | 'DA' | 'AP', startDate: string, endDate: string) {
     const supabase = await createClient()
+    const adminSupabase = createAdminClient()
 
     // Verify Admin Role
     const { data: { user } } = await supabase.auth.getUser()
@@ -64,7 +66,7 @@ export async function createAndApproveAbsence(userId: string, type: 'PO' | 'DA' 
         .from('requests')
         .select('id,type,start_date,end_date,status')
         .eq('user_id', userId)
-        .neq('status', 'cancelled')
+        .in('status', ['pending', 'approved'])
         .lte('start_date', endDate)
         .gte('end_date', startDate)
 
@@ -89,13 +91,13 @@ export async function createAndApproveAbsence(userId: string, type: 'PO' | 'DA' 
     if (error) throw new Error(error.message)
 
     // 2. Approve
-    const { error: rpcError } = await supabase.rpc('approve_request_with_capacity', {
+    const { error: rpcError } = await adminSupabase.rpc('approve_request_with_capacity', {
         request_id: request.id
     })
 
     if (rpcError) {
         // Rollback? Delete request if failed?
-        await supabase.from('requests').delete().eq('id', request.id)
+        await adminSupabase.from('requests').delete().eq('id', request.id)
         throw new Error(rpcError.message)
     }
 
@@ -111,6 +113,7 @@ export async function getUsers() {
 
 export async function updateAbsence(requestId: string, data: { userId: string, type: 'PO' | 'DA' | 'AP', startDate: string, endDate: string }) {
     const supabase = await createClient()
+    const adminSupabase = createAdminClient()
 
     // Verify Admin Role
     const { data: { user } } = await supabase.auth.getUser()
@@ -122,7 +125,7 @@ export async function updateAbsence(requestId: string, data: { userId: string, t
 
     // 1.5 Revert capacity/balance if it was previously approved
     if (oldReq?.status === 'approved') {
-        const { error: revertError } = await supabase.rpc('revert_capacity_for_request', { request_id: requestId })
+        const { error: revertError } = await adminSupabase.rpc('revert_capacity_for_request', { request_id: requestId })
         if (revertError) {
             logger.error('Error reverting previous capacity:', revertError)
             throw new Error('Error al revertir la capacidad anterior: ' + revertError.message)
@@ -134,7 +137,7 @@ export async function updateAbsence(requestId: string, data: { userId: string, t
         .from('requests')
         .select('id,type,start_date,end_date,status')
         .eq('user_id', data.userId)
-        .neq('status', 'cancelled')
+        .in('status', ['pending', 'approved'])
         .lte('start_date', data.endDate)
         .gte('end_date', data.startDate)
 
@@ -169,7 +172,7 @@ export async function updateAbsence(requestId: string, data: { userId: string, t
     await regenerateDailyAvailability(new Date(data.startDate), new Date(data.endDate))
 
     // 4. Approve again (checks capacity for new details)
-    const { error: approveError } = await supabase.rpc('approve_request_with_capacity', { request_id: requestId })
+    const { error: approveError } = await adminSupabase.rpc('approve_request_with_capacity', { request_id: requestId })
 
     if (approveError) {
         throw new Error('Solicitud actualizada a PENDIENTE. No se pudo aprobar automáticamente (posible falta de cupo): ' + approveError.message)

@@ -1,6 +1,7 @@
 'use server'
 
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { revalidatePath } from 'next/cache'
 
 export async function updateSettings(formData: FormData) {
@@ -29,13 +30,26 @@ export async function updateSettings(formData: FormData) {
         value = { percent: Number(value) } as any
     }
 
-    // Check if exists
-    const { data: existing } = await supabase.from('system_settings').select('*').eq('key', key).single()
+    // Debug logging and perform writes with admin client to bypass RLS
+    try {
+        console.log('updateSettings:', { key, value })
 
-    if (existing) {
-        await supabase.from('system_settings').update({ value }).eq('key', key)
-    } else {
-        await supabase.from('system_settings').insert({ key, value })
+        const adminSupabase = createAdminClient()
+
+        // Check if exists (using admin client)
+        const { data: existing, error: selectError } = await adminSupabase.from('system_settings').select('*').eq('key', key).maybeSingle()
+        if (selectError) throw selectError
+
+        if (existing) {
+            const { error: updateError } = await adminSupabase.from('system_settings').update({ value }).eq('key', key)
+            if (updateError) throw updateError
+        } else {
+            const { error: insertError } = await adminSupabase.from('system_settings').insert({ key, value })
+            if (insertError) throw insertError
+        }
+    } catch (e: any) {
+        console.error('Error updating settings:', e?.message || e)
+        throw new Error('Error al guardar configuración: ' + (e?.message || String(e)))
     }
 
     // Trigger regeneration if blocked_weeks changed
@@ -48,4 +62,5 @@ export async function updateSettings(formData: FormData) {
     }
 
     revalidatePath('/admin/settings')
+    return { success: true }
 }

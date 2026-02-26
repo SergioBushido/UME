@@ -1,4 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { Button } from "@/components/ui/button"
 import { Label } from "@/components/ui/label"
 import { Textarea } from "@/components/ui/textarea"
@@ -9,18 +10,32 @@ import { getCapacityConfig } from './capacity-actions'
 import { StaffTab } from './staff-tab'
 import { RulesTab } from './rules-tab'
 import { BlockedWeeksManager } from '@/components/admin/blocked-weeks-manager'
-
+import SettingsForm from './settings-form'
 export default async function SettingsPage() {
-    const supabase = await createClient()
+    // Use admin client to read system_settings (bypass RLS)
+    const supabase = createAdminClient()
 
     // Fetch current settings (for blocked weeks)
     const { data: settings } = await supabase
         .from('system_settings')
         .select('*')
 
-    // Convert array to object for easier access
+    console.log('settings', settings)
+
+    // Convert array to object for easier access, and parse blocked_weeks if needed
     const config = settings?.reduce((acc, curr) => {
-        acc[curr.key] = curr.value
+        let val = curr.value
+        if (curr.key === 'blocked_weeks') {
+            // If value is a string, try to parse as JSON
+            if (typeof val === 'string') {
+                try {
+                    val = JSON.parse(val)
+                } catch { }
+            }
+            // If not array, fallback to []
+            if (!Array.isArray(val)) val = []
+        }
+        acc[curr.key] = val
         return acc
     }, {} as Record<string, any>) || {}
 
@@ -49,16 +64,8 @@ export default async function SettingsPage() {
                                 <CardDescription>Define periodos donde el personal no podrá solicitar permisos (Ej: Navidad, Verano intenso).</CardDescription>
                             </CardHeader>
                             <CardContent>
-                                <form action={updateSettings}>
-                                    <input type="hidden" name="key" value="blocked_weeks" />
-                                    <div className="space-y-6">
-                                        <BlockedWeeksManager initialRanges={config.blocked_weeks || []} />
-
-                                        <div className="pt-4 border-t">
-                                            <Button type="submit" className="w-full sm:w-auto">Guardar Configuración de Bloqueos</Button>
-                                        </div>
-                                    </div>
-                                </form>
+                                {/* Client-side form that shows toasts */}
+                                <SettingsForm initialRanges={config.blocked_weeks || []} />
                             </CardContent>
                         </Card>
                     </div>

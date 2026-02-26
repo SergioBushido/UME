@@ -120,7 +120,8 @@ export async function deletePresenceRule(id: string) {
 }
 
 export async function regenerateDailyAvailability(start: Date, end: Date) {
-    const supabase = await createClient()
+    const { createAdminClient } = await import('@/lib/supabase/admin')
+    const supabase = createAdminClient()
 
     // 1. Fetch all levels and rules that might overlap
     // We fetch ALL for simplicity in this MVP, then filter in memory (better for complex date ranges in SQL)
@@ -153,10 +154,12 @@ export async function regenerateDailyAvailability(start: Date, end: Date) {
         .from('system_settings')
         .select('value')
         .eq('key', 'blocked_weeks')
-        .single()
+        .maybeSingle()
 
     const blockedWeeks = (blockedSettings?.value || []) as { start: string, end: string }[]
+    console.log(`Found ${blockedWeeks.length} blocked weeks rules`)
 
+    console.log(`Generating updates for ${days.length} days...`)
     const updates = days.map(day => {
         const dateStr = format(day, 'yyyy-MM-dd')
 
@@ -209,7 +212,9 @@ export async function regenerateDailyAvailability(start: Date, end: Date) {
     })
 
     // 3. Upsert
+    console.log(`Calculated ${updates.length} daily updates. Sample:`, updates[0])
     if (updates.length > 0) {
+        console.log(`Upserting ${updates.length} rows to daily_availability...`)
         const { error } = await supabase
             .from('daily_availability')
             .upsert(updates, {
@@ -217,6 +222,9 @@ export async function regenerateDailyAvailability(start: Date, end: Date) {
                 ignoreDuplicates: false
             })
 
-        if (error) console.error('Error generating availability:', error)
+        if (error) {
+            console.error('Error generating availability:', error)
+            throw new Error('No se pudo regenerar la disponibilidad diaria: ' + error.message)
+        }
     }
 }

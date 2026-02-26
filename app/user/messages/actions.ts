@@ -2,7 +2,6 @@
 
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
-import { redirect } from "next/navigation"
 
 export async function sendMessage(content: string) {
     const supabase = await createClient()
@@ -11,7 +10,7 @@ export async function sendMessage(content: string) {
     const { data: { user } } = await supabase.auth.getUser()
 
     if (!user) {
-        redirect('/login')
+        return { redirectTo: '/login' }
     }
 
     // Find an admin to send the message to
@@ -44,4 +43,5 @@ export async function sendMessage(content: string) {
 
     revalidatePath('/user/messages')
     revalidatePath(`/admin/users/${user.id}`) // Revalidate admin view as well
+    return { success: true }
 }

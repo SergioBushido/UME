@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { toast } from 'sonner'
+import { useRouter } from 'next/navigation'
 import { Send } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
@@ -9,6 +11,7 @@ import { sendMessage } from "./actions"
 export function MessageForm() {
     const [content, setContent] = useState("")
     const [isPending, setIsPending] = useState(false)
+    const router = useRouter()
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault()
@@ -16,10 +19,16 @@ export function MessageForm() {
 
         setIsPending(true)
         try {
-            await sendMessage(content)
+            const result: any = await sendMessage(content)
+            if (result?.redirectTo) {
+                router.push(result.redirectTo)
+                return
+            }
+            toast.success('Mensaje enviado')
             setContent("")
         } catch (error) {
             console.error("Failed to send message:", error)
+            toast.error('Error al enviar el mensaje')
         } finally {
             setIsPending(false)
         }

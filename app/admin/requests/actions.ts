@@ -21,7 +21,7 @@ export async function updateRequestStatus(requestId: string, status: 'approved' 
     }
 
     if (status === 'approved') {
-        const { error } = await supabase.rpc('approve_request_with_capacity', { request_id: requestId })
+        const { error } = await adminSupabase.rpc('approve_request_with_capacity', { request_id: requestId })
         if (error) {
             logger.error('RPC Error:', error)
             throw new Error(error.message)
