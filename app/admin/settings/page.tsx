@@ -10,6 +10,7 @@ import { getCapacityConfig } from './capacity-actions'
 import { StaffTab } from './staff-tab'
 import { RulesTab } from './rules-tab'
 import { BlockedWeeksManager } from '@/components/admin/blocked-weeks-manager'
+import { HolidaysManager } from '@/components/admin/holidays-manager'
 import SettingsForm from './settings-form'
 
 export const dynamic = 'force-dynamic'
@@ -45,6 +46,12 @@ export default async function SettingsPage() {
     // Fetch capacity config
     const { staffLevels, presenceRules } = await getCapacityConfig()
 
+    // Fetch holidays
+    const { data: holidays } = await supabase
+        .from('holidays')
+        .select('*')
+        .order('date', { ascending: true })
+
     return (
         <div className="space-y-6">
             <div>
@@ -69,6 +76,16 @@ export default async function SettingsPage() {
                             <CardContent>
                                 {/* Client-side form that shows toasts */}
                                 <SettingsForm initialRanges={config.blocked_weeks || []} />
+                            </CardContent>
+                        </Card>
+
+                        <Card>
+                            <CardHeader>
+                                <CardTitle>Días Festivos</CardTitle>
+                                <CardDescription>Gestión de festivos locales o nacionales. Estos días se ignorarán al descontar saldo de vacaciones.</CardDescription>
+                            </CardHeader>
+                            <CardContent>
+                                <HolidaysManager initialHolidays={holidays || []} />
                             </CardContent>
                         </Card>
                     </div>

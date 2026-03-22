@@ -36,8 +36,16 @@ export async function createRequest(formData: FormData) {
     const { data: targetProfile } = await supabase.from('profiles').select('*').eq('id', effectiveUserId).single()
     if (!targetProfile) throw new Error('Usuario objetivo no encontrado')
 
-    const diffTime = Math.abs(end.getTime() - start.getTime());
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24)) + 1;
+    const { data: businessDays, error: rpcError } = await supabase.rpc('calculate_business_days', {
+        start_date,
+        end_date
+    })
+
+    if (rpcError) {
+        throw new Error('Error al calcular días hábiles: ' + rpcError.message)
+    }
+
+    const diffDays = businessDays as number
 
     // Check capacity
     const { data: availability } = await supabase
